@@ -25,7 +25,9 @@ const CONFIG = {
   PANEL_POR_ROL: {
     ADMIN:       'admin.html',
     CANDIDATO:   'candidato.html',
+    PC:          'pc.html',
     COORDINADOR: 'coordinador.html',
+    JEFE_ZONA:   'jefe_zona.html',
     PUNTERO:     'puntero.html',
     VOCA:        'voca.html',
     CHOFER:      'chofer.html'
