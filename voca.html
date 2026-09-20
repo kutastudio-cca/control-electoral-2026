@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#D32F2F">
+  <title>Voca de Urna — Control Electoral 2026</title>
+
+  <link rel="icon" type="image/png" href="assets/img/logo-lista1.png">
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/components.css">
+  <link rel="stylesheet" href="assets/css/layout.css">
+  <link rel="stylesheet" href="assets/css/dashboard.css">
+</head>
+<body>
+
+  <header class="header">
+    <div class="container header-inner">
+      <div class="header-logo" id="header-logo"></div>
+      <div class="header-user" id="header-user"></div>
+    </div>
+  </header>
+
+  <main class="main">
+    <div class="container container-sm">
+
+      <div id="estado-dia-box" class="alert alert-info mb-4">
+        <span id="estado-dia-texto">Verificando estado del día...</span>
+      </div>
+
+      <div class="card mb-4">
+        <div class="card-header">
+          <h2 class="card-title">Registrar voca de urna</h2>
+          <span class="badge badge-rojo" id="contador-hoy">0 hoy</span>
+        </div>
+        <div class="card-body">
+          <form id="form-voca">
+
+            <h3 class="text-sm font-semibold mb-2">Intendente</h3>
+
+            <div class="form-group">
+              <label class="form-label" for="voca-int-lista">Lista</label>
+              <select id="voca-int-lista" class="form-select">
+                <option value="">— Seleccionar —</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="voca-int-cand">Candidato</label>
+              <input type="text" id="voca-int-cand" class="form-input" readonly placeholder="Se completa al elegir lista">
+            </div>
+
+            <h3 class="text-sm font-semibold mb-2 mt-6">Concejal</h3>
+
+            <div class="form-group">
+              <label class="form-label" for="voca-con-lista">Lista</label>
+              <select id="voca-con-lista" class="form-select">
+                <option value="">— Seleccionar —</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="voca-con-cand">Candidato</label>
+              <input type="text" id="voca-con-cand" class="form-input" readonly placeholder="Se completa al elegir lista">
+            </div>
+
+            <button type="submit" id="btn-voca" class="btn btn-primary btn-lg btn-block mt-4">
+              Registrar voca
+            </button>
+
+          </form>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Últimas vocas cargadas</h2>
+          <button class="btn btn-ghost btn-sm" id="btn-refresh">🔄</button>
+        </div>
+        <div class="card-body" id="lista-vocas">
+          <p class="text-2 text-center">Cargando...</p>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/utils.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/auth.js"></script>
+
+  <script>
+    (async function () {
+
+      const usuario = await AUTH.proteger(['VOCA', 'COORDINADOR', 'ADMIN']);
+      if (!usuario) return;
+
+      AUTH.renderHeaderLogo();
+      AUTH.renderHeaderUsuario(usuario);
+
+      let estadoDia = 'CERRADO';
+      let listas = { intendente: [], concejal: [] };
+      let contador = 0;
+
+      // ---------- ESTADO DEL DÍA ----------
+      async function verificarEstadoDia() {
+        try {
+          const data = await API.estadoDia();
+          estadoDia = data.estado_dia;
+          const box = document.getElementById('estado-dia-box');
+          const texto = document.getElementById('estado-dia-texto');
+          if (estadoDia === 'ABIERTO') {
+            box.className = 'alert alert-exito mb-4';
+            texto.innerHTML = '✅ <strong>Día ABIERTO</strong> — Podés registrar vocas';
+          } else {
+            box.className = 'alert alert-alerta mb-4';
+            texto.innerHTML = '🔒 <strong>Día CERRADO</strong>';
+          }
+        } catch (e) { console.error(e); }
+      }
+
+      // ---------- CARGAR LISTAS ----------
+      async function cargarListas() {
+        try {
+          const todas = await API.listarListas();
+          listas.intendente = todas.filter(l => l.categoria === 'INTENDENTE').sort((a,b) => a.orden - b.orden);
+          listas.concejal   = todas.filter(l => l.categoria === 'CONCEJAL').sort((a,b) => a.orden - b.orden);
+
+          llenarSelect('voca-int-lista', listas.intendente);
+          llenarSelect('voca-con-lista', listas.concejal);
+        } catch (e) { console.error(e); }
+      }
+
+      function llenarSelect(id, items) {
+        const sel = document.getElementById(id);
+        sel.innerHTML = '<option value="">— Seleccionar —</option>';
+        items.forEach(i => {
+          const opt = document.createElement('option');
+          opt.value = i.nombre_lista;
+          opt.dataset.candidato = i.nombre_candidato;
+          opt.textContent = i.nombre_lista;
+          sel.appendChild(opt);
+        });
+      }
+
+      // ---------- AUTOCOMPLETAR CANDIDATO ----------
+      document.getElementById('voca-int-lista').addEventListener('change', (e) => {
+        const opt = e.target.selectedOptions[0];
+        document.getElementById('voca-int-cand').value = opt.dataset.candidato || '';
+      });
+      document.getElementById('voca-con-lista').addEventListener('change', (e) => {
+        const opt = e.target.selectedOptions[0];
+        document.getElementById('voca-con-cand').value = opt.dataset.candidato || '';
+      });
+
+      // ---------- REGISTRAR VOCA ----------
+      document.getElementById('form-voca').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (estadoDia !== 'ABIERTO') {
+          UI.toast('El día no está abierto', 'alerta');
+          return;
+        }
+
+        const intLista = document.getElementById('voca-int-lista').value;
+        const intCand  = document.getElementById('voca-int-cand').value;
+        const conLista = document.getElementById('voca-con-lista').value;
+        const conCand  = document.getElementById('voca-con-cand').value;
+
+        if (!intLista && !conLista) {
+          UI.toast('Seleccioná al menos una opción', 'error');
+          return;
+        }
+
+        const btn = document.getElementById('btn-voca');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span> Guardando...';
+
+        try {
+          await API.registrarVoca({
+            intendente_lista: intLista,
+            intendente_candidato: intCand,
+            concejal_lista: conLista,
+            concejal_candidato: conCand
+          });
+          UI.toast('✅ Voca registrada', 'exito');
+          document.getElementById('form-voca').reset();
+          cargarMisVocas();
+        } catch (err) {
+          UI.toast(err.message || 'Error', 'error');
+        } finally {
+          btn.disabled = false;
+          btn.textContent = 'Registrar voca';
+        }
+      });
+
+      // ---------- LISTAR MIS VOCAS ----------
+      async function cargarMisVocas() {
+        const cont = document.getElementById('lista-vocas');
+        try {
+          const vocas = await API.misVocas();
+          contador = vocas.length;
+          document.getElementById('contador-hoy').textContent = contador + ' hoy';
+
+          if (vocas.length === 0) {
+            cont.innerHTML = '<p class="text-2 text-center">Sin vocas registradas</p>';
+            return;
+          }
+
+          const ultimas = vocas.slice(-20).reverse();
+          cont.innerHTML = ultimas.map(v => `
+            <div style="padding: 10px 0; border-bottom: 1px solid var(--borde-2);">
+              <div class="text-xs text-2">${UTILS.formatearHora(v.hora_registro)}</div>
+              <div class="text-sm">
+                <strong>Intendente:</strong> ${UTILS.escaparHTML(v.intendente_lista || '—')}<br>
+                <strong>Concejal:</strong> ${UTILS.escaparHTML(v.concejal_lista || '—')}
+              </div>
+            </div>
+          `).join('');
+        } catch (err) {
+          cont.innerHTML = '<p class="text-error">Error al cargar</p>';
+        }
+      }
+
+      document.getElementById('btn-refresh').addEventListener('click', cargarMisVocas);
+
+      // ---------- INICIALIZAR ----------
+      await verificarEstadoDia();
+      await cargarListas();
+      await cargarMisVocas();
+
+      setInterval(verificarEstadoDia, 30000);
+    })();
+  </script>
+
+</body>
+</html>
