@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#D32F2F">
+  <title>Chofer — Control Electoral 2026</title>
+
+  <link rel="icon" type="image/png" href="assets/img/logo-lista1.png">
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/components.css">
+  <link rel="stylesheet" href="assets/css/layout.css">
+  <link rel="stylesheet" href="assets/css/dashboard.css">
+</head>
+<body>
+
+  <header class="header">
+    <div class="container header-inner">
+      <div class="header-logo" id="header-logo"></div>
+      <div class="header-user" id="header-user"></div>
+    </div>
+  </header>
+
+  <main class="main">
+    <div class="container container-sm">
+
+      <div class="card mb-4">
+        <div class="card-header">
+          <h2 class="card-title">Registrar viaje</h2>
+          <span class="badge badge-rojo" id="contador-hoy">0 hoy</span>
+        </div>
+        <div class="card-body">
+          <form id="form-viaje">
+
+            <div class="form-group">
+              <label class="form-label" for="viaje-colegio">
+                Colegio destino <span class="req">*</span>
+              </label>
+              <select id="viaje-colegio" class="form-select" required>
+                <option value="">— Seleccionar —</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="viaje-cantidad">
+                Cantidad de personas <span class="req">*</span>
+              </label>
+              <input
+                type="number"
+                id="viaje-cantidad"
+                class="form-input"
+                min="1"
+                inputmode="numeric"
+                placeholder="Ej: 4"
+                required
+              >
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="viaje-obs">Observaciones</label>
+              <input type="text" id="viaje-obs" class="form-input" placeholder="Opcional">
+            </div>
+
+            <button type="submit" id="btn-viaje" class="btn btn-primary btn-lg btn-block">
+              Registrar viaje
+            </button>
+
+          </form>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Mis viajes de hoy</h2>
+          <div class="flex gap-2">
+            <span class="badge badge-info" id="total-personas">0 personas</span>
+            <button class="btn btn-ghost btn-sm" id="btn-refresh">🔄</button>
+          </div>
+        </div>
+        <div class="card-body" id="lista-viajes">
+          <p class="text-2 text-center">Cargando...</p>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/utils.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/auth.js"></script>
+
+  <script>
+    (async function () {
+
+      const usuario = await AUTH.proteger(['CHOFER', 'ADMIN']);
+      if (!usuario) return;
+
+      AUTH.renderHeaderLogo();
+      AUTH.renderHeaderUsuario(usuario);
+
+      let escuelas = [];
+
+      // ---------- CARGAR ESCUELAS ----------
+      async function cargarEscuelas() {
+        try {
+          escuelas = await API.listarEscuelas();
+          const sel = document.getElementById('viaje-colegio');
+          sel.innerHTML = '<option value="">— Seleccionar —</option>';
+          escuelas.forEach(e => {
+            const opt = document.createElement('option');
+            opt.value = e.id_escuela;
+            opt.textContent = e.nombre;
+            sel.appendChild(opt);
+          });
+        } catch (e) { console.error(e); }
+      }
+
+      // ---------- REGISTRAR VIAJE ----------
+      document.getElementById('form-viaje').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const btn = document.getElementById('btn-viaje');
+        const colegio = document.getElementById('viaje-colegio').value;
+        const cantidad = document.getElementById('viaje-cantidad').value;
+        const obs = document.getElementById('viaje-obs').value.trim();
+
+        if (!colegio || !cantidad) {
+          UI.toast('Completá colegio y cantidad', 'error');
+          return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span> Guardando...';
+
+        try {
+          await API.registrarViaje({
+            id_escuela_destino: colegio,
+            cantidad_personas: cantidad,
+            observaciones: obs
+          });
+          UI.toast('✅ Viaje registrado', 'exito');
+          document.getElementById('form-viaje').reset();
+          cargarViajes();
+        } catch (err) {
+          UI.toast(err.message || 'Error', 'error');
+        } finally {
+          btn.disabled = false;
+          btn.textContent = 'Registrar viaje';
+        }
+      });
+
+      // ---------- LISTAR MIS VIAJES ----------
+      async function cargarViajes() {
+        const cont = document.getElementById('lista-viajes');
+        try {
+          const viajes = await API.misViajes();
+          const totalPersonas = viajes.reduce((s, v) => s + Number(v.cantidad_personas || 0), 0);
+
+          document.getElementById('contador-hoy').textContent = viajes.length + ' viajes';
+          document.getElementById('total-personas').textContent = totalPersonas + ' personas';
+
+          if (viajes.length === 0) {
+            cont.innerHTML = '<p class="text-2 text-center">Sin viajes registrados</p>';
+            return;
+          }
+
+          const ultimos = viajes.slice(-20).reverse();
+          cont.innerHTML = ultimos.map(v => {
+            const esc = escuelas.find(e => e.id_escuela === v.id_escuela_destino);
+            return `
+              <div class="flex-between" style="padding: 10px 0; border-bottom: 1px solid var(--borde-2);">
+                <div>
+                  <div class="font-semibold">${UTILS.escaparHTML(esc ? esc.nombre : v.id_escuela_destino)}</div>
+                  <div class="text-xs text-2">${UTILS.formatearHora(v.hora_registro)}</div>
+                </div>
+                <div class="text-xl font-bold text-rojo">${v.cantidad_personas}</div>
+              </div>
+            `;
+          }).join('');
+        } catch (err) {
+          cont.innerHTML = '<p class="text-error">Error al cargar</p>';
+        }
+      }
+
+      document.getElementById('btn-refresh').addEventListener('click', cargarViajes);
+
+      // ---------- INICIALIZAR ----------
+      await cargarEscuelas();
+      await cargarViajes();
+    })();
+  </script>
+
+</body>
+</html>
