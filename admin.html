@@ -11,6 +11,82 @@
   <link rel="stylesheet" href="assets/css/components.css">
   <link rel="stylesheet" href="assets/css/layout.css">
   <link rel="stylesheet" href="assets/css/dashboard.css">
+
+  <style>
+    /* ---------- CHECKBOXES DE PERMISOS ---------- */
+    .permisos-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--esp-2);
+      padding: var(--esp-3);
+      background: var(--fondo);
+      border-radius: var(--radio);
+    }
+    .permiso-item {
+      display: flex;
+      align-items: center;
+      gap: var(--esp-2);
+      padding: 6px 8px;
+      border-radius: var(--radio-sm);
+      cursor: pointer;
+      transition: background var(--trans);
+      user-select: none;
+    }
+    .permiso-item:hover { background: var(--superficie); }
+    .permiso-item input { width: 16px; height: 16px; cursor: pointer; }
+    .permiso-item label {
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      flex: 1;
+    }
+
+    /* ---------- SWITCHES DASHBOARD ---------- */
+    .control-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: var(--esp-3);
+      margin-bottom: var(--esp-5);
+    }
+    @media (min-width: 768px) {
+      .control-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+    .control-card {
+      background: var(--superficie);
+      border: 1px solid var(--borde-2);
+      border-radius: var(--radio-md);
+      padding: var(--esp-4);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--esp-3);
+    }
+    .control-card.activo { background: var(--exito-bg); border-color: var(--exito); }
+    .control-card.inactivo { background: var(--alerta-bg); border-color: var(--alerta); }
+    .control-card.peligro { background: var(--error-bg); border-color: var(--error); }
+    .control-info { flex: 1; min-width: 0; }
+    .control-titulo {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--texto);
+      margin-bottom: 2px;
+    }
+    .control-sub {
+      font-size: 11px;
+      color: var(--texto-2);
+    }
+
+    /* ---------- TABLA DE MESAS ---------- */
+    .mesas-filtros {
+      display: flex;
+      gap: var(--esp-2);
+      margin-bottom: var(--esp-3);
+      flex-wrap: wrap;
+    }
+    .mesas-filtros .btn { font-size: 12px; padding: 6px 12px; }
+  </style>
 </head>
 <body>
 
@@ -25,51 +101,69 @@
     <div class="container">
 
       <div class="page-header flex" style="gap: var(--esp-4); align-items: center; margin-bottom: var(--esp-5);">
-  <img src="assets/img/pablo-alderete.jpg" alt="Pablo Alderete" 
-       style="width: 56px; height: 56px; border-radius: 50%; object-fit: cover; border: 3px solid var(--rojo-600);"
-       onerror="this.style.display='none'">
-  <div>
-    <h1 class="page-title">Panel de Administración</h1>
-    <p class="page-subtitle">Pablo Alderete · Concejal Lista 1 — ANR</p>
-  </div>
-</div>
+        <img src="assets/img/pablo-alderete.jpg" alt="Pablo Alderete"
+             style="width: 56px; height: 56px; border-radius: 50%; object-fit: cover; border: 3px solid var(--rojo-600);"
+             onerror="this.style.display='none'">
+        <div>
+          <h1 class="page-title">Panel de Administración</h1>
+          <p class="page-subtitle">Pablo Alderete · Concejal Lista 1 — ANR</p>
+        </div>
+      </div>
 
-<div class="layout-admin">
-  <aside class="sidebar">
+      <div class="layout-admin">
+
+        <aside class="sidebar">
           <nav class="sidebar-menu">
-            <button class="sidebar-item active" data-section="dashboard">
-              📊 Dashboard
-            </button>
-            <button class="sidebar-item" data-section="usuarios">
-              👥 Usuarios
-            </button>
-            <button class="sidebar-item" data-section="escuelas">
-              🏫 Colegios
-            </button>
-            <button class="sidebar-item" data-section="auditoria">
-              📜 Auditoría
-            </button>
+            <button class="sidebar-item active" data-section="dashboard">📊 Dashboard</button>
+            <button class="sidebar-item" data-section="usuarios">👥 Usuarios</button>
+            <button class="sidebar-item" data-section="colegios">🏫 Colegios</button>
+            <button class="sidebar-item" data-section="mesas">🪑 Mesas</button>
+            <button class="sidebar-item" data-section="exportar">📤 Exportar</button>
+            <button class="sidebar-item" data-section="auditoria">📜 Auditoría</button>
           </nav>
         </aside>
 
-        <!-- MAIN PANEL -->
         <div class="main-panel">
 
-          <!-- ========================================
+          <!-- ==============================
                SECCIÓN: DASHBOARD
-               ======================================== -->
+               ============================== -->
           <section id="section-dashboard" class="section-content">
 
-            <!-- Control del día -->
-            <div id="dia-status" class="dia-status mb-4">
-              <div>
-                <strong id="dia-status-titulo">Cargando...</strong>
-                <div class="text-xs" id="dia-status-sub"></div>
+            <!-- Controles -->
+            <div class="control-grid">
+              <div class="control-card" id="ctrl-dia">
+                <div class="control-info">
+                  <div class="control-titulo">Día</div>
+                  <div class="control-sub" id="ctrl-dia-sub">Cargando...</div>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="toggle-dia">
+                  <span class="switch-slider"></span>
+                </label>
               </div>
-              <label class="switch">
-                <input type="checkbox" id="toggle-dia">
-                <span class="switch-slider"></span>
-              </label>
+
+              <div class="control-card" id="ctrl-escrutinio">
+                <div class="control-info">
+                  <div class="control-titulo">Escrutinio</div>
+                  <div class="control-sub" id="ctrl-esc-sub">Cargando...</div>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="toggle-escrutinio">
+                  <span class="switch-slider"></span>
+                </label>
+              </div>
+
+              <div class="control-card" id="ctrl-sistema">
+                <div class="control-info">
+                  <div class="control-titulo">Sistema</div>
+                  <div class="control-sub" id="ctrl-sis-sub">Cargando...</div>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="toggle-sistema">
+                  <span class="switch-slider"></span>
+                </label>
+              </div>
             </div>
 
             <!-- KPIs -->
@@ -90,6 +184,14 @@
                 <div class="kpi-label">Movidas</div>
                 <div class="kpi-value exito" id="kpi-movidas">0</div>
               </div>
+              <div class="kpi-card">
+                <div class="kpi-label">PC</div>
+                <div class="kpi-value" id="kpi-pc">0</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">Envíos zona</div>
+                <div class="kpi-value" id="kpi-jz">0</div>
+              </div>
             </div>
 
             <!-- Votos por categoría -->
@@ -104,9 +206,9 @@
 
           </section>
 
-          <!-- ========================================
+          <!-- ==============================
                SECCIÓN: USUARIOS
-               ======================================== -->
+               ============================== -->
           <section id="section-usuarios" class="section-content hidden">
             <div class="card">
               <div class="card-header">
@@ -119,23 +221,87 @@
             </div>
           </section>
 
-          <!-- ========================================
-               SECCIÓN: ESCUELAS
-               ======================================== -->
-          <section id="section-escuelas" class="section-content hidden">
+          <!-- ==============================
+               SECCIÓN: COLEGIOS
+               ============================== -->
+          <section id="section-colegios" class="section-content hidden">
             <div class="card">
               <div class="card-header">
                 <h2 class="card-title">🏫 Colegios</h2>
               </div>
-              <div class="card-body" id="lista-escuelas">
+              <div class="card-body" id="lista-colegios">
                 <div class="empty-state"><p>Cargando...</p></div>
               </div>
             </div>
           </section>
 
-          <!-- ========================================
+          <!-- ==============================
+               SECCIÓN: MESAS
+               ============================== -->
+          <section id="section-mesas" class="section-content hidden">
+            <div class="card">
+              <div class="card-header">
+                <h2 class="card-title">🪑 Mesas</h2>
+                <button class="btn btn-ghost btn-sm" id="btn-refresh-mesas">🔄</button>
+              </div>
+              <div class="card-body">
+                <div class="mesas-filtros">
+                  <button class="btn btn-primary btn-sm" data-filtro="todas">Todas</button>
+                  <button class="btn btn-secondary btn-sm" data-filtro="abiertas">Abiertas</button>
+                  <button class="btn btn-secondary btn-sm" data-filtro="cerradas">Cerradas</button>
+                </div>
+                <div id="lista-mesas">
+                  <div class="empty-state"><p>Cargando...</p></div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- ==============================
+               SECCIÓN: EXPORTAR
+               ============================== -->
+          <section id="section-exportar" class="section-content hidden">
+            <div class="card">
+              <div class="card-header">
+                <h2 class="card-title">📤 Exportar datos</h2>
+              </div>
+              <div class="card-body">
+                <p class="text-2 mb-4">
+                  Descargá todos los datos del sistema en formato CSV (abre en Excel o Google Sheets).
+                </p>
+                <div class="flex gap-2" style="flex-wrap: wrap;">
+                  <button class="btn btn-primary" id="btn-exportar-todo">
+                    📥 Exportar TODO (todas las hojas)
+                  </button>
+                  <button class="btn btn-secondary" id="btn-exportar-asistencia">
+                    📋 Asistencias
+                  </button>
+                  <button class="btn btn-secondary" id="btn-exportar-votos">
+                    🗳️ Votos
+                  </button>
+                  <button class="btn btn-secondary" id="btn-exportar-voca">
+                    📊 Vocas
+                  </button>
+                  <button class="btn btn-secondary" id="btn-exportar-viajes">
+                    🚗 Viajes
+                  </button>
+                  <button class="btn btn-secondary" id="btn-exportar-pc">
+                    🎯 PC
+                  </button>
+                  <button class="btn btn-secondary" id="btn-exportar-jz">
+                    📦 Jefes de Zona
+                  </button>
+                  <button class="btn btn-secondary" id="btn-exportar-audit">
+                    📜 Auditoría
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- ==============================
                SECCIÓN: AUDITORÍA
-               ======================================== -->
+               ============================== -->
           <section id="section-auditoria" class="section-content hidden">
             <div class="card">
               <div class="card-header">
@@ -150,9 +316,130 @@
 
         </div>
       </div>
-
     </div>
   </main>
+
+  <!-- ============================================================
+       MODAL: Crear / Editar usuario
+       ============================================================ -->
+  <div class="modal-overlay hidden" id="modal-usuario">
+    <div class="modal" style="max-width: 640px;">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modal-usuario-titulo">Nuevo usuario</h3>
+        <button class="modal-close" id="modal-usuario-cerrar" aria-label="Cerrar">✕</button>
+      </div>
+
+      <form id="form-usuario">
+        <div class="modal-body">
+
+          <div class="form-group">
+            <label class="form-label" for="u-nombre">Nombre completo <span class="req">*</span></label>
+            <input type="text" id="u-nombre" class="form-input" required autocomplete="off">
+          </div>
+
+          <div class="grid grid-2" style="gap: var(--esp-3);">
+            <div class="form-group">
+              <label class="form-label" for="u-usuario">Usuario <span class="req">*</span></label>
+              <input type="text" id="u-usuario" class="form-input" required autocapitalize="none" autocomplete="off">
+              <span class="form-hint">Sin espacios, sin mayúsculas</span>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="u-rol">Rol <span class="req">*</span></label>
+              <select id="u-rol" class="form-select" required>
+                <option value="">— Seleccionar —</option>
+                <option value="ADMIN">Admin</option>
+                <option value="CANDIDATO">Candidato</option>
+                <option value="PC">PC — Puesto de Control</option>
+                <option value="COORDINADOR">Coordinador</option>
+                <option value="JEFE_ZONA">Jefe de Zona</option>
+                <option value="CHOFER">Chofer</option>
+                <option value="PUNTERO">Puntero</option>
+                <option value="VOCA">Voca de urna</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group hidden" id="u-escuela-group">
+            <label class="form-label" for="u-escuela">Colegio <span class="req">*</span></label>
+            <select id="u-escuela" class="form-select">
+              <option value="">— Seleccionar —</option>
+            </select>
+          </div>
+
+          <!-- PERMISOS -->
+          <div class="form-group">
+            <label class="form-label">Permisos</label>
+            <div class="permisos-grid">
+              <label class="permiso-item">
+                <input type="checkbox" id="perm-asistencia">
+                <label for="perm-asistencia">Asistencia</label>
+              </label>
+              <label class="permiso-item">
+                <input type="checkbox" id="perm-escrutinio">
+                <label for="perm-escrutinio">Escrutinio</label>
+              </label>
+              <label class="permiso-item">
+                <input type="checkbox" id="perm-voca">
+                <label for="perm-voca">Voca</label>
+              </label>
+              <label class="permiso-item">
+                <input type="checkbox" id="perm-viaje">
+                <label for="perm-viaje">Viaje</label>
+              </label>
+              <label class="permiso-item">
+                <input type="checkbox" id="perm-pc">
+                <label for="perm-pc">PC</label>
+              </label>
+              <label class="permiso-item">
+                <input type="checkbox" id="perm-envio-zona">
+                <label for="perm-envio-zona">Envío zona</label>
+              </label>
+            </div>
+            <span class="form-hint">Se auto-marcan según el rol, pero podés ajustarlos.</span>
+          </div>
+
+          <!-- CREDENCIAL (solo al crear) -->
+          <div id="u-credencial-section">
+            <div class="form-group">
+              <label class="form-label">Tipo de credencial <span class="req">*</span></label>
+              <div class="flex gap-3">
+                <label class="flex" style="gap: 6px; align-items: center; cursor: pointer;">
+                  <input type="radio" name="u-tipo-cred" value="PASSWORD" checked> Contraseña
+                </label>
+                <label class="flex" style="gap: 6px; align-items: center; cursor: pointer;">
+                  <input type="radio" name="u-tipo-cred" value="PIN"> PIN (4 dígitos)
+                </label>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="u-password">Credencial <span class="req">*</span></label>
+              <input type="password" id="u-password" class="form-input" autocomplete="new-password">
+              <span class="form-hint" id="u-password-hint"></span>
+            </div>
+          </div>
+
+          <div class="grid grid-2" style="gap: var(--esp-3);">
+            <div class="form-group">
+              <label class="form-label" for="u-email">Email</label>
+              <input type="email" id="u-email" class="form-input" placeholder="opcional" autocomplete="off">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="u-telefono">Teléfono</label>
+              <input type="tel" id="u-telefono" class="form-input" placeholder="opcional" autocomplete="off">
+            </div>
+          </div>
+
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="modal-usuario-cancelar">Cancelar</button>
+          <button type="submit" class="btn btn-primary" id="btn-guardar-usuario">Crear usuario</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <script src="assets/js/config.js"></script>
   <script src="assets/js/utils.js"></script>
@@ -168,9 +455,15 @@
       AUTH.renderHeaderLogo();
       AUTH.renderHeaderUsuario(usuario);
 
-      let estadoDiaActual = 'CERRADO';
+      let usuarioEditando = null;
+      let cacheUsuarios = [];
+      let cacheEscuelas = [];
+      let cacheMesas = [];
+      let filtroMesas = 'todas';
 
-      // ---------- SIDEBAR ----------
+      // ============================================================
+      // SIDEBAR
+      // ============================================================
       document.querySelectorAll('.sidebar-item').forEach(item => {
         item.addEventListener('click', () => {
           document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
@@ -178,68 +471,99 @@
           item.classList.add('active');
           document.getElementById('section-' + item.dataset.section).classList.remove('hidden');
 
-          // Cargar datos según sección
           const sec = item.dataset.section;
           if (sec === 'usuarios')   cargarUsuarios();
-          if (sec === 'escuelas')   cargarEscuelas();
+          if (sec === 'colegios')   cargarColegios();
+          if (sec === 'mesas')      cargarMesas();
           if (sec === 'auditoria')  cargarAuditoria();
         });
       });
 
-      // ---------- ESTADO DEL DÍA ----------
-      async function cargarEstadoDia() {
+      // ============================================================
+      // ESTADO DEL SISTEMA
+      // ============================================================
+      async function cargarEstadoSistema() {
         try {
-          const data = await API.estadoDia();
-          estadoDiaActual = data.estado_dia;
-          actualizarDiaUI();
+          const s = await API.request('estadoSistema');
+
+          actualizarControl('ctrl-dia', 'toggle-dia', 'ctrl-dia-sub',
+            s.estado_dia === 'ABIERTO', s.estado_dia);
+          actualizarControl('ctrl-escrutinio', 'toggle-escrutinio', 'ctrl-esc-sub',
+            s.escrutinio_habilitado === 'ABIERTO', s.escrutinio_habilitado);
+          actualizarControl('ctrl-sistema', 'toggle-sistema', 'ctrl-sis-sub',
+            s.sistema_abierto === 'ABIERTO', s.sistema_abierto);
+
         } catch (e) { console.error(e); }
       }
 
-      function actualizarDiaUI() {
-        const box = document.getElementById('dia-status');
-        const titulo = document.getElementById('dia-status-titulo');
-        const sub = document.getElementById('dia-status-sub');
-        const toggle = document.getElementById('toggle-dia');
+      function actualizarControl(ctrlId, toggleId, subId, activo, estado) {
+        const ctrl = document.getElementById(ctrlId);
+        const toggle = document.getElementById(toggleId);
+        const sub = document.getElementById(subId);
 
-        if (estadoDiaActual === 'ABIERTO') {
-          box.className = 'dia-status abierto mb-4';
-          titulo.textContent = '✅ Día ABIERTO';
-          sub.textContent = 'Se pueden cargar datos';
-          toggle.checked = true;
-        } else {
-          box.className = 'dia-status cerrado mb-4';
-          titulo.textContent = '🔒 Día CERRADO';
-          sub.textContent = 'No se pueden cargar datos';
-          toggle.checked = false;
-        }
+        toggle.checked = activo;
+        ctrl.className = 'control-card ' + (activo ? 'activo' : 'inactivo');
+        sub.textContent = activo ? 'Abierto' : 'Cerrado';
       }
 
+      // Toggle día
       document.getElementById('toggle-dia').addEventListener('change', async (e) => {
-        const quiereAbrir = e.target.checked;
-        const accion = quiereAbrir ? 'Abrir' : 'Cerrar';
-        if (!confirm(`¿${accion} el día?`)) {
-          e.target.checked = !quiereAbrir;
-          return;
-        }
+        const abrir = e.target.checked;
+        if (!confirm(`¿${abrir ? 'Abrir' : 'Cerrar'} el día?`)) { e.target.checked = !abrir; return; }
         try {
-          if (quiereAbrir) await API.abrirDia();
+          if (abrir) await API.abrirDia();
           else await API.cerrarDia();
-          UI.toast(`Día ${quiereAbrir ? 'abierto' : 'cerrado'}`, 'exito');
-          await cargarEstadoDia();
+          UI.toast(`Día ${abrir ? 'abierto' : 'cerrado'}`, 'exito');
+          await cargarEstadoSistema();
         } catch (err) {
           UI.toast(err.message || 'Error', 'error');
-          e.target.checked = !quiereAbrir;
+          e.target.checked = !abrir;
         }
       });
 
-      // ---------- KPIs ----------
+      // Toggle escrutinio
+      document.getElementById('toggle-escrutinio').addEventListener('change', async (e) => {
+        const abrir = e.target.checked;
+        if (!confirm(`¿${abrir ? 'Habilitar' : 'Deshabilitar'} el escrutinio?`)) { e.target.checked = !abrir; return; }
+        try {
+          await API.request('toggleEscrutinio');
+          UI.toast(`Escrutinio ${abrir ? 'habilitado' : 'deshabilitado'}`, 'exito');
+          await cargarEstadoSistema();
+        } catch (err) {
+          UI.toast(err.message || 'Error', 'error');
+          e.target.checked = !abrir;
+        }
+      });
+
+      // Toggle sistema (cierre definitivo)
+      document.getElementById('toggle-sistema').addEventListener('change', async (e) => {
+        const abrir = e.target.checked;
+        const mensaje = abrir
+          ? '¿Reabrir el sistema? Los usuarios van a poder loguearse y cargar datos.'
+          : '⚠️ ¿CERRAR EL SISTEMA? Nadie va a poder loguearse ni cargar datos (excepto vos que ya estás dentro).';
+        if (!confirm(mensaje)) { e.target.checked = !abrir; return; }
+        try {
+          await API.request('toggleSistema');
+          UI.toast(`Sistema ${abrir ? 'abierto' : 'cerrado'}`, abrir ? 'exito' : 'alerta');
+          await cargarEstadoSistema();
+        } catch (err) {
+          UI.toast(err.message || 'Error', 'error');
+          e.target.checked = !abrir;
+        }
+      });
+
+      // ============================================================
+      // KPIs
+      // ============================================================
       async function cargarKPIs() {
         try {
-          const t = await API.totalesGlobales();
+          const t = await API.request('totalesGlobalesV2');
           document.getElementById('kpi-asistencias').textContent = UTILS.formatearNumero(t.totalAsistencias);
           document.getElementById('kpi-votos').textContent = UTILS.formatearNumero(t.totalVotosGeneral);
           document.getElementById('kpi-vocas').textContent = UTILS.formatearNumero(t.totalVocas);
           document.getElementById('kpi-movidas').textContent = UTILS.formatearNumero(t.totalPersonasMovidas);
+          document.getElementById('kpi-pc').textContent = UTILS.formatearNumero(t.totalPC);
+          document.getElementById('kpi-jz').textContent = UTILS.formatearNumero(t.totalEnviosZona);
           renderCategorias(t.totalVotos);
         } catch (e) { console.error(e); }
       }
@@ -258,21 +582,26 @@
           return `
             <div class="cat-barra">
               <div class="cat-label">${etiquetas[k]}</div>
-              <div class="cat-track">
-                <div class="cat-fill ${clases[k]}" style="width: ${pct}%"></div>
-              </div>
+              <div class="cat-track"><div class="cat-fill ${clases[k]}" style="width: ${pct}%"></div></div>
               <div class="cat-total">${cat[k]}</div>
             </div>
           `;
         }).join('');
       }
 
-      // ---------- USUARIOS ----------
+      // ============================================================
+      // USUARIOS
+      // ============================================================
       async function cargarUsuarios() {
         const cont = document.getElementById('lista-usuarios');
         try {
-          const usuarios = await API.listarUsuarios();
-          const escuelas = await API.listarEscuelas();
+          cacheUsuarios = await API.listarUsuarios();
+          cacheEscuelas = await API.listarEscuelas();
+
+          if (cacheUsuarios.length === 0) {
+            cont.innerHTML = '<div class="empty-state"><p>No hay usuarios</p></div>';
+            return;
+          }
 
           cont.innerHTML = `
             <div class="tabla-wrapper">
@@ -283,19 +612,33 @@
                     <th>Usuario</th>
                     <th>Rol</th>
                     <th>Colegio</th>
+                    <th>Credencial</th>
                     <th>Estado</th>
+                    <th style="text-align:right">Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
-                  ${usuarios.map(u => {
-                    const esc = escuelas.find(e => e.id_escuela === u.id_escuela);
+                  ${cacheUsuarios.map(u => {
+                    const esc = cacheEscuelas.find(e => e.id_escuela === u.id_escuela);
+                    const estadoBadge = u.estado === 'ACTIVO'
+                      ? '<span class="badge badge-exito">ACTIVO</span>'
+                      : '<span class="badge badge-gris">INACTIVO</span>';
+                    const credBadge = u.tipo_credencial === 'PIN'
+                      ? '<span class="badge badge-info">PIN</span>'
+                      : '<span class="badge badge-rojo">PASS</span>';
                     return `
                       <tr>
                         <td class="font-semibold">${UTILS.escaparHTML(u.nombre_completo)}</td>
                         <td>${UTILS.escaparHTML(u.usuario)}</td>
-                        <td><span class="badge badge-rojo">${u.rol}</span></td>
+                        <td><span class="badge badge-gris">${u.rol}</span></td>
                         <td>${esc ? UTILS.escaparHTML(esc.nombre) : '—'}</td>
-                        <td><span class="badge ${u.estado === 'ACTIVO' ? 'badge-exito' : 'badge-gris'}">${u.estado}</span></td>
+                        <td>${credBadge}</td>
+                        <td>${estadoBadge}</td>
+                        <td style="text-align:right; white-space:nowrap;">
+                          <button class="btn btn-ghost btn-sm" data-accion="editar" data-id="${u.id_usuario}" title="Editar">✏️</button>
+                          <button class="btn btn-ghost btn-sm" data-accion="reset" data-id="${u.id_usuario}" data-nombre="${UTILS.escaparHTML(u.nombre_completo)}" title="Resetear credencial">🔑</button>
+                          <button class="btn btn-ghost btn-sm" data-accion="toggle" data-id="${u.id_usuario}" data-estado="${u.estado}" title="${u.estado === 'ACTIVO' ? 'Desactivar' : 'Activar'}">${u.estado === 'ACTIVO' ? '🚫' : '✅'}</button>
+                        </td>
                       </tr>
                     `;
                   }).join('')}
@@ -303,18 +646,267 @@
               </table>
             </div>
           `;
+
+          cont.querySelectorAll('button[data-accion]').forEach(btn => {
+            btn.addEventListener('click', () => manejarAccion(btn.dataset.accion, btn.dataset.id, btn.dataset));
+          });
+
         } catch (e) {
           cont.innerHTML = '<div class="empty-state"><p>Error al cargar usuarios</p></div>';
         }
       }
 
-      document.getElementById('btn-nuevo-usuario').addEventListener('click', () => {
-        UI.toast('Próximamente — alta de usuario', 'info');
+      async function manejarAccion(accion, id, data) {
+        if (accion === 'editar') {
+          abrirModalEditar(id);
+        } else if (accion === 'reset') {
+          if (!confirm(`¿Resetear credencial de "${data.nombre}"?`)) return;
+          try {
+            const res = await API.request('resetCredencial', { id_usuario: id });
+            alert(
+              `Nueva credencial generada\n\n` +
+              `Usuario: ${data.nombre}\n` +
+              `Tipo: ${res.tipo}\n` +
+              `Credencial: ${res.nueva_credencial}\n\n` +
+              `⚠️ Anotala AHORA. No se vuelve a mostrar.`
+            );
+            UI.toast('Credencial reseteada', 'exito');
+          } catch (err) {
+            UI.toast(err.message || 'Error', 'error');
+          }
+        } else if (accion === 'toggle') {
+          const desactivar = data.estado === 'ACTIVO';
+          if (!confirm(`¿${desactivar ? 'Desactivar' : 'Activar'} este usuario?`)) return;
+          try {
+            await API.request('toggleUsuario', { id_usuario: id });
+            UI.toast(`Usuario ${desactivar ? 'desactivado' : 'activado'}`, 'exito');
+            cargarUsuarios();
+          } catch (err) {
+            UI.toast(err.message || 'Error', 'error');
+          }
+        }
+      }
+
+      // ============================================================
+      // MODAL USUARIO
+      // ============================================================
+      const modal = document.getElementById('modal-usuario');
+      const formUsuario = document.getElementById('form-usuario');
+      const btnGuardar = document.getElementById('btn-guardar-usuario');
+      const tituloModal = document.getElementById('modal-usuario-titulo');
+      const grupoEscuela = document.getElementById('u-escuela-group');
+      const sectionCredencial = document.getElementById('u-credencial-section');
+      const inputPassword = document.getElementById('u-password');
+      const hintPassword = document.getElementById('u-password-hint');
+
+      function abrirModal() {
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+      }
+
+      function cerrarModal() {
+        modal.classList.add('hidden');
+        document.body.style.overflow = '';
+        formUsuario.reset();
+        usuarioEditando = null;
+        document.getElementById('u-usuario').disabled = false;
+        actualizarCamposDinamicos();
+      }
+
+      async function abrirModalNuevo() {
+        usuarioEditando = null;
+        tituloModal.textContent = 'Nuevo usuario';
+        btnGuardar.textContent = 'Crear usuario';
+        formUsuario.reset();
+        sectionCredencial.style.display = '';
+        await llenarSelectEscuelas();
+        document.getElementById('u-rol').value = '';
+        actualizarCamposDinamicos();
+        abrirModal();
+        setTimeout(() => document.getElementById('u-nombre').focus(), 100);
+      }
+
+      async function abrirModalEditar(id) {
+        try {
+          const u = cacheUsuarios.find(x => x.id_usuario === id);
+          if (!u) return;
+
+          usuarioEditando = id;
+          tituloModal.textContent = 'Editar usuario';
+          btnGuardar.textContent = 'Guardar cambios';
+
+          document.getElementById('u-nombre').value = u.nombre_completo;
+          document.getElementById('u-usuario').value = u.usuario;
+          document.getElementById('u-usuario').disabled = true;
+          document.getElementById('u-rol').value = u.rol;
+          document.getElementById('u-email').value = u.email || '';
+          document.getElementById('u-telefono').value = u.telefono || '';
+
+          await llenarSelectEscuelas();
+          document.getElementById('u-escuela').value = u.id_escuela || '';
+
+          // Ocultar sección de credencial al editar (se usa Reset)
+          sectionCredencial.style.display = 'none';
+
+          // Cargar permisos
+          marcarPermisos(u.permisos);
+
+          actualizarCamposDinamicos();
+          abrirModal();
+        } catch (err) {
+          UI.toast('Error al cargar usuario', 'error');
+        }
+      }
+
+      async function llenarSelectEscuelas() {
+        const sel = document.getElementById('u-escuela');
+        sel.innerHTML = '<option value="">— Seleccionar —</option>';
+        cacheEscuelas.forEach(e => {
+          const opt = document.createElement('option');
+          opt.value = e.id_escuela;
+          opt.textContent = e.nombre;
+          sel.appendChild(opt);
+        });
+      }
+
+      function marcarPermisos(permisos) {
+        permisos = permisos || {};
+        document.getElementById('perm-asistencia').checked  = !!permisos.asistencia;
+        document.getElementById('perm-escrutinio').checked  = !!permisos.escrutinio;
+        document.getElementById('perm-voca').checked        = !!permisos.voca;
+        document.getElementById('perm-viaje').checked       = !!permisos.viaje;
+        document.getElementById('perm-pc').checked          = !!permisos.pc;
+        document.getElementById('perm-envio-zona').checked  = !!permisos.envio_zona;
+      }
+
+      function aplicarPermisosPorRol(rol) {
+        const defaults = {
+          ADMIN:       { asistencia: true,  escrutinio: true,  voca: true,  viaje: true,  pc: true,  envio_zona: true  },
+          CANDIDATO:   { asistencia: false, escrutinio: true,  voca: false, viaje: false, pc: false, envio_zona: false },
+          PC:          { asistencia: false, escrutinio: false, voca: false, viaje: false, pc: true,  envio_zona: false },
+          COORDINADOR: { asistencia: true,  escrutinio: true,  voca: true,  viaje: true,  pc: false, envio_zona: false },
+          JEFE_ZONA:   { asistencia: false, escrutinio: false, voca: false, viaje: false, pc: false, envio_zona: true  },
+          CHOFER:      { asistencia: false, escrutinio: false, voca: false, viaje: true,  pc: false, envio_zona: false },
+          PUNTERO:     { asistencia: true,  escrutinio: false, voca: false, viaje: false, pc: false, envio_zona: false },
+          VOCA:        { asistencia: false, escrutinio: false, voca: true,  viaje: false, pc: false, envio_zona: false }
+        };
+        const p = defaults[rol] || defaults.PUNTERO;
+        marcarPermisos(p);
+      }
+
+      function actualizarCamposDinamicos() {
+        const rol = document.getElementById('u-rol').value;
+        const requiereColegio = ['COORDINADOR', 'PUNTERO', 'VOCA'].includes(rol);
+
+        if (requiereColegio) {
+          grupoEscuela.classList.remove('hidden');
+          document.getElementById('u-escuela').required = true;
+        } else {
+          grupoEscuela.classList.add('hidden');
+          document.getElementById('u-escuela').required = false;
+        }
+
+        // Aplicar permisos por defecto del rol si NO estamos editando
+        if (!usuarioEditando && rol) aplicarPermisosPorRol(rol);
+
+        // Actualizar hint de credencial
+        const tipo = document.querySelector('input[name="u-tipo-cred"]:checked').value;
+        if (tipo === 'PIN') {
+          inputPassword.setAttribute('maxlength', '4');
+          inputPassword.setAttribute('inputmode', 'numeric');
+          hintPassword.textContent = 'Exactamente 4 dígitos numéricos';
+        } else {
+          inputPassword.removeAttribute('maxlength');
+          inputPassword.removeAttribute('inputmode');
+          hintPassword.textContent = 'Mínimo 8 caracteres, con mayúscula y número';
+        }
+      }
+
+      document.getElementById('btn-nuevo-usuario').addEventListener('click', abrirModalNuevo);
+      document.getElementById('modal-usuario-cerrar').addEventListener('click', cerrarModal);
+      document.getElementById('modal-usuario-cancelar').addEventListener('click', cerrarModal);
+      modal.addEventListener('click', (e) => { if (e.target === modal) cerrarModal(); });
+
+      document.getElementById('u-rol').addEventListener('change', actualizarCamposDinamicos);
+      document.querySelectorAll('input[name="u-tipo-cred"]').forEach(r => {
+        r.addEventListener('change', actualizarCamposDinamicos);
       });
 
-      // ---------- ESCUELAS ----------
-      async function cargarEscuelas() {
-        const cont = document.getElementById('lista-escuelas');
+      formUsuario.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        btnGuardar.disabled = true;
+        btnGuardar.innerHTML = '<span class="spinner"></span> Guardando...';
+
+        try {
+          const nombre = document.getElementById('u-nombre').value.trim();
+          const login = document.getElementById('u-usuario').value.trim().toLowerCase();
+          const rol = document.getElementById('u-rol').value;
+          const escuela = document.getElementById('u-escuela').value;
+          const email = document.getElementById('u-email').value.trim();
+          const telefono = document.getElementById('u-telefono').value.trim();
+
+          const permisos = {
+            asistencia:   document.getElementById('perm-asistencia').checked,
+            escrutinio:   document.getElementById('perm-escrutinio').checked,
+            voca:         document.getElementById('perm-voca').checked,
+            viaje:        document.getElementById('perm-viaje').checked,
+            pc:           document.getElementById('perm-pc').checked,
+            envio_zona:   document.getElementById('perm-envio-zona').checked
+          };
+
+          if (usuarioEditando) {
+            const cambios = {
+              nombre_completo: nombre,
+              rol: rol,
+              id_escuela: escuela,
+              email: email,
+              telefono: telefono,
+              perm_asistencia: permisos.asistencia,
+              perm_escrutinio: permisos.escrutinio,
+              perm_voca: permisos.voca,
+              perm_viaje: permisos.viaje,
+              perm_pc: permisos.pc,
+              perm_envio_zona: permisos.envio_zona
+            };
+            await API.editarUsuario(usuarioEditando, cambios);
+            UI.toast('Usuario actualizado', 'exito');
+          } else {
+            const tipoCred = document.querySelector('input[name="u-tipo-cred"]:checked').value;
+            const credencial = inputPassword.value.trim();
+
+            if (!credencial) throw new Error('Ingresá la credencial');
+            if (tipoCred === 'PIN' && !/^\d{4}$/.test(credencial)) throw new Error('El PIN debe tener exactamente 4 dígitos');
+            if (tipoCred === 'PASSWORD' && credencial.length < 8) throw new Error('La contraseña debe tener al menos 8 caracteres');
+
+            await API.crearUsuario({
+              usuario: login,
+              nombre_completo: nombre,
+              rol: rol,
+              email: email,
+              telefono: telefono,
+              id_escuela: escuela,
+              tipo_credencial: tipoCred,
+              credencial: credencial,
+              permisos: permisos
+            });
+            UI.toast('Usuario creado', 'exito');
+          }
+
+          cerrarModal();
+          cargarUsuarios();
+        } catch (err) {
+          UI.toast(err.message || 'Error al guardar', 'error');
+        } finally {
+          btnGuardar.disabled = false;
+          btnGuardar.textContent = usuarioEditando ? 'Guardar cambios' : 'Crear usuario';
+        }
+      });
+
+      // ============================================================
+      // COLEGIOS
+      // ============================================================
+      async function cargarColegios() {
+        const cont = document.getElementById('lista-colegios');
         try {
           const escuelas = await API.listarEscuelas();
           cont.innerHTML = `
@@ -322,19 +914,24 @@
               <table class="tabla">
                 <thead>
                   <tr>
-                    <th>Nombre</th>
+                    <th>Colegio</th>
                     <th>Zona</th>
+                    <th style="text-align:right">Cantidad de mesas</th>
                     <th>Estado</th>
                   </tr>
                 </thead>
                 <tbody>
-                  ${escuelas.map(e => `
-                    <tr>
-                      <td class="font-semibold">${UTILS.escaparHTML(e.nombre)}</td>
-                      <td>${UTILS.escaparHTML(e.zona || '—')}</td>
-                      <td><span class="badge badge-exito">${e.estado}</span></td>
-                    </tr>
-                  `).join('')}
+                  ${escuelas.map(e => {
+                    const mesas = e.id_escuela === 'COL_MRCAL' ? 24 : (e.id_escuela === 'COL_KAARENDY' ? 20 : (e.cantidad_mesas || '—'));
+                    return `
+                      <tr>
+                        <td class="font-semibold">${UTILS.escaparHTML(e.nombre)}</td>
+                        <td>${UTILS.escaparHTML(e.zona || '—')}</td>
+                        <td style="text-align:right" class="font-bold">${mesas}</td>
+                        <td><span class="badge badge-exito">${e.estado}</span></td>
+                      </tr>
+                    `;
+                  }).join('')}
                 </tbody>
               </table>
             </div>
@@ -344,7 +941,197 @@
         }
       }
 
-      // ---------- AUDITORÍA ----------
+      // ============================================================
+      // MESAS
+      // ============================================================
+      document.querySelectorAll('[data-filtro]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('[data-filtro]').forEach(b => {
+            b.classList.remove('btn-primary');
+            b.classList.add('btn-secondary');
+          });
+          btn.classList.remove('btn-secondary');
+          btn.classList.add('btn-primary');
+          filtroMesas = btn.dataset.filtro;
+          renderMesas();
+        });
+      });
+
+      async function cargarMesas() {
+        const cont = document.getElementById('lista-mesas');
+        try {
+          cacheMesas = await API.request('mesasTodas');
+          renderMesas();
+        } catch (e) {
+          cont.innerHTML = '<div class="empty-state"><p>Error al cargar</p></div>';
+        }
+      }
+
+      function renderMesas() {
+        const cont = document.getElementById('lista-mesas');
+        let lista = cacheMesas;
+
+        if (filtroMesas === 'abiertas') lista = cacheMesas.filter(m => m.estado === 'ABIERTA');
+        if (filtroMesas === 'cerradas') lista = cacheMesas.filter(m => m.estado === 'CERRADA');
+
+        if (lista.length === 0) {
+          cont.innerHTML = '<div class="empty-state"><p>Sin mesas para mostrar</p></div>';
+          return;
+        }
+
+        cont.innerHTML = `
+          <div class="tabla-wrapper">
+            <table class="tabla">
+              <thead>
+                <tr>
+                  <th>Colegio</th>
+                  <th>Mesa</th>
+                  <th>Estado</th>
+                  <th>Abrió</th>
+                  <th>Hora apertura</th>
+                  <th>Hora cierre</th>
+                  <th style="text-align:right">Votos</th>
+                  <th style="text-align:right">Acción</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${lista.map(m => `
+                  <tr>
+                    <td>${UTILS.escaparHTML(m.id_escuela)}</td>
+                    <td class="font-bold">${UTILS.escaparHTML(m.numero_mesa)}</td>
+                    <td>
+                      <span class="badge ${m.estado === 'ABIERTA' ? 'badge-exito' : 'badge-gris'}">
+                        ${m.estado}
+                      </span>
+                    </td>
+                    <td class="text-sm">${UTILS.escaparHTML(m.nombre_apertura)}</td>
+                    <td class="text-sm">${UTILS.formatearHora(m.hora_apertura)}</td>
+                    <td class="text-sm">${m.hora_cierre ? UTILS.formatearHora(m.hora_cierre) : '—'}</td>
+                    <td style="text-align:right" class="font-bold">${m.total_votos}</td>
+                    <td style="text-align:right">
+                      ${m.estado === 'ABIERTA'
+                        ? `<button class="btn btn-danger btn-sm" data-forzar="${m.id_apertura}">Forzar cierre</button>`
+                        : '—'}
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+
+        cont.querySelectorAll('button[data-forzar]').forEach(btn => {
+          btn.addEventListener('click', () => forzarCierre(btn.dataset.forzar));
+        });
+      }
+
+      async function forzarCierre(id) {
+        if (!confirm('¿Forzar el cierre de esta mesa?')) return;
+        try {
+          await API.request('forzarCierreMesa', { id_apertura: id });
+          UI.toast('Mesa cerrada', 'exito');
+          cargarMesas();
+        } catch (err) {
+          UI.toast(err.message || 'Error', 'error');
+        }
+      }
+
+      document.getElementById('btn-refresh-mesas').addEventListener('click', cargarMesas);
+
+      // ============================================================
+      // EXPORTAR
+      // ============================================================
+      function exportarCSV(nombre, filas, encabezados) {
+        const escapar = (v) => {
+          const s = String(v == null ? '' : v);
+          return '"' + s.replace(/"/g, '""') + '"';
+        };
+        const lineas = [encabezados.map(escapar).join(',')];
+        filas.forEach(f => {
+          lineas.push(encabezados.map(h => escapar(f[h])).join(','));
+        });
+        const csv = '\uFEFF' + lineas.join('\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = nombre + '.csv';
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      async function exportarHoja(accion, nombre, endpoint, campos) {
+        try {
+          UI.loader(true, 'Exportando...');
+          const datos = await API.request(endpoint);
+          exportarCSV(nombre + '_' + new Date().toISOString().slice(0, 10), datos, campos);
+          UI.toast('Exportado: ' + nombre, 'exito');
+        } catch (err) {
+          UI.toast('Error al exportar: ' + err.message, 'error');
+        } finally {
+          UI.loader(false);
+        }
+      }
+
+      document.getElementById('btn-exportar-asistencia').addEventListener('click', () => {
+        exportarHoja('asistencia', 'asistencias', 'listarAsistencias',
+          ['id_asistencia', 'fecha', 'id_usuario', 'id_escuela', 'numero_mesa', 'nombre_persona', 'dni', 'observaciones', 'hora_registro', 'estado']);
+      });
+
+      document.getElementById('btn-exportar-votos').addEventListener('click', () => {
+        exportarHoja('votos', 'votos', 'listarVotos',
+          ['id_voto', 'id_apertura', 'id_escuela', 'numero_mesa', 'id_usuario', 'categoria', 'cantidad', 'hora_registro', 'estado']);
+      });
+
+      document.getElementById('btn-exportar-pc').addEventListener('click', () => {
+        exportarHoja('pc', 'puesto_control', 'listarRegistrosPC',
+          ['id_pc', 'fecha', 'id_usuario', 'hora_registro', 'nombre', 'apellido', 'dni', 'colegio', 'mesa', 'observaciones', 'estado']);
+      });
+
+      document.getElementById('btn-exportar-jz').addEventListener('click', () => {
+        exportarHoja('jz', 'jefes_zona', 'listarEnviosZona',
+          ['id_envio', 'fecha', 'id_usuario', 'hora_registro', 'apellido_familia', 'cantidad_personas', 'zona_barrio', 'tipo_envio', 'observaciones', 'estado']);
+      });
+
+      document.getElementById('btn-exportar-audit').addEventListener('click', () => {
+        exportarHoja('audit', 'auditoria', 'verAuditoria',
+          ['id_auditoria', 'fecha_hora', 'id_usuario', 'accion', 'tabla_afectada', 'id_registro', 'datos_anteriores', 'datos_nuevos']);
+      });
+
+      document.getElementById('btn-exportar-todo').addEventListener('click', async () => {
+        try {
+          UI.loader(true, 'Exportando todo...');
+          // Asistencias
+          try {
+            const asis = await API.request('listarAsistencias');
+            exportarCSV('TODO_asistencias', asis, ['id_asistencia', 'fecha', 'id_usuario', 'id_escuela', 'numero_mesa', 'nombre_persona', 'dni', 'observaciones', 'hora_registro', 'estado']);
+          } catch (e) {}
+          await new Promise(r => setTimeout(r, 400));
+          try {
+            const votos = await API.request('listarVotos');
+            exportarCSV('TODO_votos', votos, ['id_voto', 'id_apertura', 'id_escuela', 'numero_mesa', 'id_usuario', 'categoria', 'cantidad', 'hora_registro']);
+          } catch (e) {}
+          await new Promise(r => setTimeout(r, 400));
+          try {
+            const pc = await API.request('listarRegistrosPC');
+            exportarCSV('TODO_pc', pc, ['id_pc', 'fecha', 'id_usuario', 'hora_registro', 'nombre', 'apellido', 'dni', 'colegio', 'mesa', 'observaciones']);
+          } catch (e) {}
+          await new Promise(r => setTimeout(r, 400));
+          try {
+            const jz = await API.request('listarEnviosZona');
+            exportarCSV('TODO_jefes_zona', jz, ['id_envio', 'fecha', 'id_usuario', 'hora_registro', 'apellido_familia', 'cantidad_personas', 'zona_barrio', 'tipo_envio']);
+          } catch (e) {}
+          UI.toast('Exportación completa', 'exito');
+        } catch (err) {
+          UI.toast('Error: ' + err.message, 'error');
+        } finally {
+          UI.loader(false);
+        }
+      });
+
+      // ============================================================
+      // AUDITORÍA
+      // ============================================================
       async function cargarAuditoria() {
         const cont = document.getElementById('lista-auditoria');
         try {
@@ -373,12 +1160,15 @@
 
       document.getElementById('btn-refresh-audit').addEventListener('click', cargarAuditoria);
 
-      // ---------- INICIALIZAR ----------
-      await cargarEstadoDia();
+      // ============================================================
+      // INICIALIZAR
+      // ============================================================
+      await cargarEstadoSistema();
       await cargarKPIs();
+      await cargarUsuarios();  // Para tener cache de escuelas
 
       setInterval(() => {
-        cargarEstadoDia();
+        cargarEstadoSistema();
         cargarKPIs();
       }, 30000);
 
