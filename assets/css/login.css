@@ -1,1 +1,104 @@
+/* ============================================================
+   DIA_D2026 — login.css
+   ============================================================ */
 
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--esp-4);
+  background: linear-gradient(135deg, var(--rojo-800) 0%, var(--rojo-600) 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Patrón decorativo de fondo */
+.login-page::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(255,255,255,0.08) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(255,255,255,0.06) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.login-card {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  background: var(--superficie);
+  border-radius: var(--radio-lg);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  overflow: hidden;
+  animation: fadeIn 0.4s ease;
+}
+
+.login-header {
+  padding: var(--esp-8) var(--esp-6) var(--esp-6);
+  text-align: center;
+  border-bottom: 1px solid var(--borde-2);
+}
+
+.login-logo {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto var(--esp-4);
+  object-fit: contain;
+}
+
+.login-titulo {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--texto);
+  margin-bottom: var(--esp-1);
+}
+
+.login-subtitulo {
+  font-size: 13px;
+  color: var(--texto-2);
+}
+
+.login-body {
+  padding: var(--esp-6);
+}
+
+.login-body .form-input {
+  font-size: 16px;
+}
+
+.login-btn {
+  margin-top: var(--esp-2);
+}
+
+.login-error {
+  display: none;
+  margin-bottom: var(--esp-4);
+  padding: 10px 14px;
+  background: var(--error-bg);
+  color: var(--error);
+  border-left: 4px solid var(--error);
+  border-radius: var(--radio-sm);
+  font-size: 13px;
+  font-weight: 500;
+}
+.login-error.visible { display: block; }
+
+.login-footer {
+  padding: var(--esp-4) var(--esp-6);
+  text-align: center;
+  font-size: 11px;
+  color: var(--texto-3);
+  background: var(--fondo);
+  border-top: 1px solid var(--borde-2);
+}
+
+.login-footer strong { color: var(--texto-2); }
+
+/* ---------- MOBILE ---------- */
+@media (max-width: 480px) {
+  .login-header { padding: var(--esp-6) var(--esp-4); }
+  .login-body { padding: var(--esp-5) var(--esp-4); }
+  .login-logo { width: 64px; height: 64px; }
+}
