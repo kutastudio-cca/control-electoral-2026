@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#D32F2F">
+  <title>Admin — Control Electoral 2026</title>
+
+  <link rel="icon" type="image/png" href="assets/img/logo-lista1.png">
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/components.css">
+  <link rel="stylesheet" href="assets/css/layout.css">
+  <link rel="stylesheet" href="assets/css/dashboard.css">
+</head>
+<body>
+
+  <header class="header">
+    <div class="container header-inner">
+      <div class="header-logo" id="header-logo"></div>
+      <div class="header-user" id="header-user"></div>
+    </div>
+  </header>
+
+  <main class="main">
+    <div class="container">
+
+      <div class="layout-admin">
+
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+          <nav class="sidebar-menu">
+            <button class="sidebar-item active" data-section="dashboard">
+              📊 Dashboard
+            </button>
+            <button class="sidebar-item" data-section="usuarios">
+              👥 Usuarios
+            </button>
+            <button class="sidebar-item" data-section="escuelas">
+              🏫 Colegios
+            </button>
+            <button class="sidebar-item" data-section="auditoria">
+              📜 Auditoría
+            </button>
+          </nav>
+        </aside>
+
+        <!-- MAIN PANEL -->
+        <div class="main-panel">
+
+          <!-- ========================================
+               SECCIÓN: DASHBOARD
+               ======================================== -->
+          <section id="section-dashboard" class="section-content">
+
+            <!-- Control del día -->
+            <div id="dia-status" class="dia-status mb-4">
+              <div>
+                <strong id="dia-status-titulo">Cargando...</strong>
+                <div class="text-xs" id="dia-status-sub"></div>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="toggle-dia">
+                <span class="switch-slider"></span>
+              </label>
+            </div>
+
+            <!-- KPIs -->
+            <div class="kpi-grid">
+              <div class="kpi-card">
+                <div class="kpi-label">Asistencias</div>
+                <div class="kpi-value rojo" id="kpi-asistencias">0</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">Votos</div>
+                <div class="kpi-value" id="kpi-votos">0</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">Vocas</div>
+                <div class="kpi-value info" id="kpi-vocas">0</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">Movidas</div>
+                <div class="kpi-value exito" id="kpi-movidas">0</div>
+              </div>
+            </div>
+
+            <!-- Votos por categoría -->
+            <div class="card mb-4">
+              <div class="card-header">
+                <h2 class="card-title">🗳️ Votos por categoría</h2>
+              </div>
+              <div class="card-body" id="votos-categoria">
+                <div class="empty-state"><p>Cargando...</p></div>
+              </div>
+            </div>
+
+          </section>
+
+          <!-- ========================================
+               SECCIÓN: USUARIOS
+               ======================================== -->
+          <section id="section-usuarios" class="section-content hidden">
+            <div class="card">
+              <div class="card-header">
+                <h2 class="card-title">👥 Usuarios</h2>
+                <button class="btn btn-primary btn-sm" id="btn-nuevo-usuario">+ Nuevo usuario</button>
+              </div>
+              <div class="card-body" id="lista-usuarios">
+                <div class="empty-state"><p>Cargando...</p></div>
+              </div>
+            </div>
+          </section>
+
+          <!-- ========================================
+               SECCIÓN: ESCUELAS
+               ======================================== -->
+          <section id="section-escuelas" class="section-content hidden">
+            <div class="card">
+              <div class="card-header">
+                <h2 class="card-title">🏫 Colegios</h2>
+              </div>
+              <div class="card-body" id="lista-escuelas">
+                <div class="empty-state"><p>Cargando...</p></div>
+              </div>
+            </div>
+          </section>
+
+          <!-- ========================================
+               SECCIÓN: AUDITORÍA
+               ======================================== -->
+          <section id="section-auditoria" class="section-content hidden">
+            <div class="card">
+              <div class="card-header">
+                <h2 class="card-title">📜 Últimas 100 acciones</h2>
+                <button class="btn btn-ghost btn-sm" id="btn-refresh-audit">🔄</button>
+              </div>
+              <div class="card-body" id="lista-auditoria">
+                <div class="empty-state"><p>Cargando...</p></div>
+              </div>
+            </div>
+          </section>
+
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/utils.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/auth.js"></script>
+
+  <script>
+    (async function () {
+
+      const usuario = await AUTH.proteger(['ADMIN']);
+      if (!usuario) return;
+
+      AUTH.renderHeaderLogo();
+      AUTH.renderHeaderUsuario(usuario);
+
+      let estadoDiaActual = 'CERRADO';
+
+      // ---------- SIDEBAR ----------
+      document.querySelectorAll('.sidebar-item').forEach(item => {
+        item.addEventListener('click', () => {
+          document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+          document.querySelectorAll('.section-content').forEach(s => s.classList.add('hidden'));
+          item.classList.add('active');
+          document.getElementById('section-' + item.dataset.section).classList.remove('hidden');
+
+          // Cargar datos según sección
+          const sec = item.dataset.section;
+          if (sec === 'usuarios')   cargarUsuarios();
+          if (sec === 'escuelas')   cargarEscuelas();
+          if (sec === 'auditoria')  cargarAuditoria();
+        });
+      });
+
+      // ---------- ESTADO DEL DÍA ----------
+      async function cargarEstadoDia() {
+        try {
+          const data = await API.estadoDia();
+          estadoDiaActual = data.estado_dia;
+          actualizarDiaUI();
+        } catch (e) { console.error(e); }
+      }
+
+      function actualizarDiaUI() {
+        const box = document.getElementById('dia-status');
+        const titulo = document.getElementById('dia-status-titulo');
+        const sub = document.getElementById('dia-status-sub');
+        const toggle = document.getElementById('toggle-dia');
+
+        if (estadoDiaActual === 'ABIERTO') {
+          box.className = 'dia-status abierto mb-4';
+          titulo.textContent = '✅ Día ABIERTO';
+          sub.textContent = 'Se pueden cargar datos';
+          toggle.checked = true;
+        } else {
+          box.className = 'dia-status cerrado mb-4';
+          titulo.textContent = '🔒 Día CERRADO';
+          sub.textContent = 'No se pueden cargar datos';
+          toggle.checked = false;
+        }
+      }
+
+      document.getElementById('toggle-dia').addEventListener('change', async (e) => {
+        const quiereAbrir = e.target.checked;
+        const accion = quiereAbrir ? 'Abrir' : 'Cerrar';
+        if (!confirm(`¿${accion} el día?`)) {
+          e.target.checked = !quiereAbrir;
+          return;
+        }
+        try {
+          if (quiereAbrir) await API.abrirDia();
+          else await API.cerrarDia();
+          UI.toast(`Día ${quiereAbrir ? 'abierto' : 'cerrado'}`, 'exito');
+          await cargarEstadoDia();
+        } catch (err) {
+          UI.toast(err.message || 'Error', 'error');
+          e.target.checked = !quiereAbrir;
+        }
+      });
+
+      // ---------- KPIs ----------
+      async function cargarKPIs() {
+        try {
+          const t = await API.totalesGlobales();
+          document.getElementById('kpi-asistencias').textContent = UTILS.formatearNumero(t.totalAsistencias);
+          document.getElementById('kpi-votos').textContent = UTILS.formatearNumero(t.totalVotosGeneral);
+          document.getElementById('kpi-vocas').textContent = UTILS.formatearNumero(t.totalVocas);
+          document.getElementById('kpi-movidas').textContent = UTILS.formatearNumero(t.totalPersonasMovidas);
+          renderCategorias(t.totalVotos);
+        } catch (e) { console.error(e); }
+      }
+
+      function renderCategorias(cat) {
+        const cont = document.getElementById('votos-categoria');
+        const total = Object.values(cat).reduce((a, b) => a + b, 0);
+        if (total === 0) {
+          cont.innerHTML = '<div class="empty-state"><p>Sin votos cargados aún</p></div>';
+          return;
+        }
+        const etiquetas = { COMPLETO: '🟢 Completo', CRUZADO: '🔴 Cruzado', BLANCO: '⚪ Blanco', NULO: '⚫ Nulo' };
+        const clases = { COMPLETO: 'completo', CRUZADO: 'cruzado', BLANCO: 'blanco', NULO: 'nulo' };
+        cont.innerHTML = Object.keys(cat).map(k => {
+          const pct = total > 0 ? (cat[k] / total) * 100 : 0;
+          return `
+            <div class="cat-barra">
+              <div class="cat-label">${etiquetas[k]}</div>
+              <div class="cat-track">
+                <div class="cat-fill ${clases[k]}" style="width: ${pct}%"></div>
+              </div>
+              <div class="cat-total">${cat[k]}</div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // ---------- USUARIOS ----------
+      async function cargarUsuarios() {
+        const cont = document.getElementById('lista-usuarios');
+        try {
+          const usuarios = await API.listarUsuarios();
+          const escuelas = await API.listarEscuelas();
+
+          cont.innerHTML = `
+            <div class="tabla-wrapper">
+              <table class="tabla">
+                <thead>
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Usuario</th>
+                    <th>Rol</th>
+                    <th>Colegio</th>
+                    <th>Estado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${usuarios.map(u => {
+                    const esc = escuelas.find(e => e.id_escuela === u.id_escuela);
+                    return `
+                      <tr>
+                        <td class="font-semibold">${UTILS.escaparHTML(u.nombre_completo)}</td>
+                        <td>${UTILS.escaparHTML(u.usuario)}</td>
+                        <td><span class="badge badge-rojo">${u.rol}</span></td>
+                        <td>${esc ? UTILS.escaparHTML(esc.nombre) : '—'}</td>
+                        <td><span class="badge ${u.estado === 'ACTIVO' ? 'badge-exito' : 'badge-gris'}">${u.estado}</span></td>
+                      </tr>
+                    `;
+                  }).join('')}
+                </tbody>
+              </table>
+            </div>
+          `;
+        } catch (e) {
+          cont.innerHTML = '<div class="empty-state"><p>Error al cargar usuarios</p></div>';
+        }
+      }
+
+      document.getElementById('btn-nuevo-usuario').addEventListener('click', () => {
+        UI.toast('Próximamente — alta de usuario', 'info');
+      });
+
+      // ---------- ESCUELAS ----------
+      async function cargarEscuelas() {
+        const cont = document.getElementById('lista-escuelas');
+        try {
+          const escuelas = await API.listarEscuelas();
+          cont.innerHTML = `
+            <div class="tabla-wrapper">
+              <table class="tabla">
+                <thead>
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Zona</th>
+                    <th>Estado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${escuelas.map(e => `
+                    <tr>
+                      <td class="font-semibold">${UTILS.escaparHTML(e.nombre)}</td>
+                      <td>${UTILS.escaparHTML(e.zona || '—')}</td>
+                      <td><span class="badge badge-exito">${e.estado}</span></td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          `;
+        } catch (e) {
+          cont.innerHTML = '<div class="empty-state"><p>Error al cargar</p></div>';
+        }
+      }
+
+      // ---------- AUDITORÍA ----------
+      async function cargarAuditoria() {
+        const cont = document.getElementById('lista-auditoria');
+        try {
+          const logs = await API.verAuditoria(100);
+          if (logs.length === 0) {
+            cont.innerHTML = '<div class="empty-state"><p>Sin registros</p></div>';
+            return;
+          }
+          cont.innerHTML = logs.map(l => `
+            <div class="flex-between" style="padding: 8px 0; border-bottom: 1px solid var(--borde-2);">
+              <div>
+                <div class="font-semibold text-sm">
+                  ${UTILS.escaparHTML(l.accion)} · <span class="text-2">${UTILS.escaparHTML(l.tabla_afectada)}</span>
+                </div>
+                <div class="text-xs text-3">
+                  ${UTILS.formatearFechaHora(l.fecha_hora)} · ${UTILS.escaparHTML(l.id_registro || '—')}
+                </div>
+              </div>
+              <div class="text-xs text-3">${UTILS.escaparHTML(l.id_usuario)}</div>
+            </div>
+          `).join('');
+        } catch (e) {
+          cont.innerHTML = '<div class="empty-state"><p>Error al cargar</p></div>';
+        }
+      }
+
+      document.getElementById('btn-refresh-audit').addEventListener('click', cargarAuditoria);
+
+      // ---------- INICIALIZAR ----------
+      await cargarEstadoDia();
+      await cargarKPIs();
+
+      setInterval(() => {
+        cargarEstadoDia();
+        cargarKPIs();
+      }, 30000);
+
+    })();
+  </script>
+
+</body>
+</html>
