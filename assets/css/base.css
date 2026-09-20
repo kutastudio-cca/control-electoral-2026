@@ -1,1 +1,234 @@
+/* ============================================================
+   DIA_D2026 — base.css
+   Reset + variables + tipografía + utilitarios
+   ============================================================ */
 
+/* ---------- RESET ---------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  min-height: 100vh;
+  font-family: var(--fuente);
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--texto);
+  background-color: var(--fondo);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+img, svg, video {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+button, input, select, textarea {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+a {
+  color: var(--rojo-600);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+a:hover { color: var(--rojo-800); }
+
+ul, ol { list-style: none; }
+
+/* ---------- FUENTE (Inter) ---------- */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+/* ---------- VARIABLES ---------- */
+:root {
+  /* Tipografía */
+  --fuente: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  /* 🔴 Nuestra lista (Lista 1) */
+  --rojo-600: #D32F2F;
+  --rojo-800: #B71C1C;
+  --rojo-200: #FFCDD2;
+  --rojo-50:  #FFEBEE;
+
+  /* 🟡 Lista opositora (Lista 20) */
+  --amarillo-600: #FBC02D;
+  --amarillo-800: #F57F17;
+  --amarillo-200: #FFF59D;
+  --amarillo-50:  #FFFDE7;
+
+  /* ⚪ Neutros */
+  --fondo:      #F8F9FA;
+  --superficie: #FFFFFF;
+  --texto:      #1A1A1A;
+  --texto-2:    #5F6368;
+  --texto-3:    #9AA0A6;
+  --borde:      #DADCE0;
+  --borde-2:    #F1F3F4;
+
+  /* 🟢 Estados */
+  --exito:  #2E7D32;
+  --exito-bg: #E8F5E9;
+  --error:  #C62828;
+  --error-bg: #FFEBEE;
+  --info:   #1565C0;
+  --info-bg: #E3F2FD;
+  --alerta: #EF6C00;
+  --alerta-bg: #FFF3E0;
+
+  /* Espaciados */
+  --esp-1: 4px;
+  --esp-2: 8px;
+  --esp-3: 12px;
+  --esp-4: 16px;
+  --esp-5: 20px;
+  --esp-6: 24px;
+  --esp-8: 32px;
+  --esp-10: 40px;
+  --esp-12: 48px;
+  --esp-16: 64px;
+
+  /* Radios */
+  --radio-sm: 6px;
+  --radio: 8px;
+  --radio-md: 12px;
+  --radio-lg: 16px;
+  --radio-full: 9999px;
+
+  /* Sombras */
+  --sombra-sm: 0 1px 3px rgba(0,0,0,0.08);
+  --sombra:    0 4px 12px rgba(0,0,0,0.10);
+  --sombra-lg: 0 8px 24px rgba(0,0,0,0.15);
+
+  /* Transiciones */
+  --trans: 0.15s ease;
+  --trans-md: 0.25s ease;
+
+  /* Layout */
+  --max-width: 1200px;
+  --header-height: 64px;
+}
+
+/* ---------- TIPOGRAFÍA ---------- */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--texto);
+}
+
+h1 { font-size: 32px; }
+h2 { font-size: 24px; }
+h3 { font-size: 20px; }
+h4 { font-size: 18px; }
+h5 { font-size: 16px; }
+h6 { font-size: 14px; }
+
+p { margin-bottom: 0; }
+
+/* ---------- UTILITARIOS ---------- */
+.text-center  { text-align: center; }
+.text-left    { text-align: left; }
+.text-right   { text-align: right; }
+
+.text-sm      { font-size: 14px; }
+.text-xs      { font-size: 12px; }
+.text-lg      { font-size: 18px; }
+.text-xl      { font-size: 22px; }
+
+.text-2       { color: var(--texto-2); }
+.text-3       { color: var(--texto-3); }
+.text-rojo    { color: var(--rojo-600); }
+.text-amarillo{ color: var(--amarillo-800); }
+.text-exito   { color: var(--exito); }
+.text-error   { color: var(--error); }
+
+.font-medium  { font-weight: 500; }
+.font-semibold{ font-weight: 600; }
+.font-bold    { font-weight: 700; }
+
+.mt-1 { margin-top: var(--esp-1); }
+.mt-2 { margin-top: var(--esp-2); }
+.mt-3 { margin-top: var(--esp-3); }
+.mt-4 { margin-top: var(--esp-4); }
+.mt-5 { margin-top: var(--esp-5); }
+.mt-6 { margin-top: var(--esp-6); }
+.mt-8 { margin-top: var(--esp-8); }
+
+.mb-1 { margin-bottom: var(--esp-1); }
+.mb-2 { margin-bottom: var(--esp-2); }
+.mb-3 { margin-bottom: var(--esp-3); }
+.mb-4 { margin-bottom: var(--esp-4); }
+.mb-5 { margin-bottom: var(--esp-5); }
+.mb-6 { margin-bottom: var(--esp-6); }
+.mb-8 { margin-bottom: var(--esp-8); }
+
+.mx-auto { margin-left: auto; margin-right: auto; }
+
+.p-2 { padding: var(--esp-2); }
+.p-3 { padding: var(--esp-3); }
+.p-4 { padding: var(--esp-4); }
+.p-6 { padding: var(--esp-6); }
+
+.flex        { display: flex; }
+.flex-col    { flex-direction: column; }
+.flex-center { display: flex; align-items: center; justify-content: center; }
+.flex-between{ display: flex; align-items: center; justify-content: space-between; }
+.flex-wrap   { flex-wrap: wrap; }
+.gap-1 { gap: var(--esp-1); }
+.gap-2 { gap: var(--esp-2); }
+.gap-3 { gap: var(--esp-3); }
+.gap-4 { gap: var(--esp-4); }
+.gap-6 { gap: var(--esp-6); }
+
+.w-full { width: 100%; }
+.h-full { height: 100%; }
+
+.hidden { display: none !important; }
+.invisible { visibility: hidden; }
+
+/* ---------- ANIMACIONES ---------- */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.fade-in { animation: fadeIn 0.3s ease; }
+
+.spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+/* ---------- SCROLLBAR (web) ---------- */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--fondo); }
+::-webkit-scrollbar-thumb { background: var(--borde); border-radius: 5px; }
+::-webkit-scrollbar-thumb:hover { background: var(--texto-3); }
