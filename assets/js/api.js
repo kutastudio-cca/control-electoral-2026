@@ -20,12 +20,12 @@ const API = {
     }
 
     try {
-      const resp = await fetch(CONFIG.API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // Apps Script acepta text/plain
-        body: JSON.stringify(payload),
-        redirect: 'follow'
-      });
+    const resp = await fetch(CONFIG.API_URL, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  body: 'data=' + encodeURIComponent(JSON.stringify(payload)),
+  redirect: 'follow'
+});
 
       if (!resp.ok) {
         throw new Error('Error HTTP ' + resp.status);
