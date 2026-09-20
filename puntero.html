@@ -11,6 +11,157 @@
   <link rel="stylesheet" href="assets/css/components.css">
   <link rel="stylesheet" href="assets/css/layout.css">
   <link rel="stylesheet" href="assets/css/dashboard.css">
+
+  <style>
+    /* ---------- ESCRUTINIO BOTONES ---------- */
+    .voto-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--esp-3);
+      margin-bottom: var(--esp-4);
+    }
+
+    @media (max-width: 640px) {
+      .voto-grid { grid-template-columns: 1fr; }
+    }
+
+    .voto-btn {
+      background: var(--superficie);
+      border: 2px solid var(--borde);
+      border-radius: var(--radio-md);
+      padding: var(--esp-3);
+      cursor: pointer;
+      transition: all var(--trans);
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: var(--esp-2);
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .voto-btn:active {
+      transform: scale(0.96);
+      border-color: var(--rojo-600);
+      background: var(--rojo-50);
+    }
+
+    .voto-btn.cruzado:hover  { border-color: var(--rojo-600); }
+    .voto-btn.completo:hover { border-color: var(--exito); }
+    .voto-btn.blanco:hover   { border-color: var(--texto-3); }
+
+    .voto-fotos {
+      display: flex;
+      justify-content: center;
+      gap: var(--esp-2);
+    }
+
+    .voto-foto {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--borde);
+      background: var(--fondo);
+    }
+
+    .voto-foto.blanco-placeholder {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #fff;
+      border: 2px dashed var(--borde);
+      color: var(--texto-3);
+      font-size: 9px;
+      font-weight: 700;
+      line-height: 1;
+      text-align: center;
+      padding: 2px;
+    }
+
+    .voto-titulo {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--texto);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .voto-titulo.cruzado  { color: var(--rojo-600); }
+    .voto-titulo.completo { color: var(--exito); }
+    .voto-titulo.blanco   { color: var(--texto-2); }
+
+    .voto-sub {
+      font-size: 10px;
+      color: var(--texto-3);
+      line-height: 1.2;
+      min-height: 24px;
+    }
+
+    .voto-contador {
+      font-size: 26px;
+      font-weight: 800;
+      line-height: 1;
+      color: var(--texto);
+      margin-top: var(--esp-1);
+    }
+
+    .voto-btn.cruzado .voto-contador  { color: var(--rojo-600); }
+    .voto-btn.completo .voto-contador { color: var(--exito); }
+    .voto-btn.blanco .voto-contador   { color: var(--texto-2); }
+
+    .voto-total-box {
+      background: var(--superficie);
+      border: 1px solid var(--borde-2);
+      border-radius: var(--radio-md);
+      padding: var(--esp-3) var(--esp-4);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--esp-4);
+    }
+
+    .voto-total-label {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--texto-2);
+      letter-spacing: 0.5px;
+    }
+
+    .voto-total-valor {
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--rojo-600);
+      line-height: 1;
+    }
+
+    .voto-feedback {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--rojo-600);
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: var(--radio-full);
+      font-weight: 700;
+      font-size: 14px;
+      box-shadow: var(--sombra-lg);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s, transform 0.2s;
+      z-index: 9999;
+    }
+
+    .voto-feedback.visible {
+      opacity: 1;
+      transform: translateX(-50%) translateY(-8px);
+    }
+
+    .voto-feedback.completo { background: var(--exito); }
+    .voto-feedback.blanco   { background: var(--texto-2); }
+  </style>
 </head>
 <body>
 
@@ -24,12 +175,10 @@
   <main class="main">
     <div class="container container-md">
 
-      <!-- Estado del día -->
       <div id="estado-dia-box" class="alert alert-info mb-4">
         <span id="estado-dia-texto">Verificando estado del día...</span>
       </div>
 
-      <!-- Tabs -->
       <div class="tabs">
         <button class="tab active" data-tab="asistencia">📋 Asistencia</button>
         <button class="tab" data-tab="escrutinio">🗳️ Escrutinio</button>
@@ -52,52 +201,28 @@
                 <label class="form-label" for="asist-mesa">
                   Número de mesa <span class="req">*</span>
                 </label>
-                <input
-                  type="text"
-                  id="asist-mesa"
-                  class="form-input"
-                  placeholder="Ej: 5"
-                  inputmode="numeric"
-                  required
-                >
+                <input type="text" id="asist-mesa" class="form-input" placeholder="Ej: 5" inputmode="numeric" required>
               </div>
 
               <div class="form-group">
                 <label class="form-label" for="asist-nombre">
                   Nombre y apellido <span class="text-3">(opcional)</span>
                 </label>
-                <input
-                  type="text"
-                  id="asist-nombre"
-                  class="form-input"
-                  placeholder="Ej: Juan Pérez"
-                  autocapitalize="words"
-                >
+                <input type="text" id="asist-nombre" class="form-input" placeholder="Ej: Juan Pérez" autocapitalize="words">
               </div>
 
               <div class="form-group">
                 <label class="form-label" for="asist-dni">
                   DNI <span class="text-3">(opcional)</span>
                 </label>
-                <input
-                  type="text"
-                  id="asist-dni"
-                  class="form-input"
-                  placeholder="Ej: 12345678"
-                  inputmode="numeric"
-                >
+                <input type="text" id="asist-dni" class="form-input" placeholder="Ej: 12345678" inputmode="numeric">
               </div>
 
               <div class="form-group">
                 <label class="form-label" for="asist-obs">
                   Observaciones <span class="text-3">(opcional)</span>
                 </label>
-                <textarea
-                  id="asist-obs"
-                  class="form-textarea"
-                  placeholder="Ej: necesitaba transporte, vino con familia..."
-                  rows="2"
-                ></textarea>
+                <textarea id="asist-obs" class="form-textarea" placeholder="Ej: necesitaba transporte..." rows="2"></textarea>
               </div>
 
               <button type="submit" id="btn-asistencia" class="btn btn-primary btn-lg btn-block">
@@ -108,7 +233,6 @@
           </div>
         </div>
 
-        <!-- Últimas asistencias -->
         <div class="card">
           <div class="card-header">
             <h2 class="card-title">Últimas asistencias</h2>
@@ -128,8 +252,9 @@
 
         <!-- Mesa actual -->
         <div id="mesa-actual-box" class="hidden">
+
           <div class="alert alert-exito mb-4">
-            <div class="flex-between w-full">
+            <div class="flex-between w-full" style="flex-wrap: wrap; gap: var(--esp-3);">
               <div>
                 <strong>Mesa abierta:</strong>
                 <span id="mesa-actual-info"></span>
@@ -138,67 +263,50 @@
             </div>
           </div>
 
-          <div class="card mb-4">
-            <div class="card-header">
-              <h2 class="card-title">Cargar votos</h2>
-            </div>
-            <div class="card-body">
-              <form id="form-voto">
-
-                <div class="form-group">
-                  <label class="form-label" for="voto-categoria">
-                    Categoría <span class="req">*</span>
-                  </label>
-                  <select id="voto-categoria" class="form-select" required>
-                    <option value="">— Seleccionar —</option>
-                    <option value="COMPLETO">🟢 Completo (Concejal nuestro + Intendente nuestro)</option>
-                    <option value="CRUZADO">🔴 Cruzado (Concejal nuestro + Intendente opositor)</option>
-                    <option value="BLANCO">⚪ Blanco (Concejal nuestro + Intendente en blanco)</option>
-                    <option value="NULO">⚫ Nulo / Impugnado</option>
-                  </select>
-                </div>
-
-                <div class="form-group">
-                  <label class="form-label" for="voto-cantidad">
-                    Cantidad <span class="req">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    id="voto-cantidad"
-                    class="form-input"
-                    min="1"
-                    inputmode="numeric"
-                    placeholder="Ej: 25"
-                    required
-                  >
-                </div>
-
-                <div class="form-group">
-                  <label class="form-label" for="voto-obs">Observaciones</label>
-                  <input
-                    type="text"
-                    id="voto-obs"
-                    class="form-input"
-                    placeholder="Opcional"
-                  >
-                </div>
-
-                <button type="submit" id="btn-voto" class="btn btn-primary btn-lg btn-block">
-                  Cargar votos
-                </button>
-
-              </form>
-            </div>
+          <!-- Total contados -->
+          <div class="voto-total-box">
+            <div class="voto-total-label">Total contados</div>
+            <div class="voto-total-valor" id="voto-total">0</div>
           </div>
 
-          <div class="card">
-            <div class="card-header">
-              <h2 class="card-title">Votos cargados en esta mesa</h2>
-            </div>
-            <div class="card-body" id="lista-votos">
-              <p class="text-2 text-center">Sin votos cargados aún</p>
-            </div>
+          <!-- Botones de voto -->
+          <div class="voto-grid">
+
+            <!-- CRUZADO -->
+            <button type="button" class="voto-btn cruzado" data-categoria="CRUZADO">
+              <div class="voto-fotos">
+                <img src="assets/img/pablo-alderete.jpg" alt="Pablo Alderete" class="voto-foto" onerror="this.style.display='none'">
+                <img src="assets/img/elvio-coronel.jpg" alt="Elvio Coronel" class="voto-foto" onerror="this.style.display='none'">
+              </div>
+              <div class="voto-titulo cruzado">Cruzado</div>
+              <div class="voto-sub">Alderete + Coronel</div>
+              <div class="voto-contador" id="contador-cruzado">0</div>
+            </button>
+
+            <!-- COMPLETO -->
+            <button type="button" class="voto-btn completo" data-categoria="COMPLETO">
+              <div class="voto-fotos">
+                <img src="assets/img/pablo-alderete.jpg" alt="Pablo Alderete" class="voto-foto" onerror="this.style.display='none'">
+                <img src="assets/img/varon-ovelar.jpg" alt="Varón Ovelar" class="voto-foto" onerror="this.style.display='none'">
+              </div>
+              <div class="voto-titulo completo">Completo</div>
+              <div class="voto-sub">Alderete + Ovelar</div>
+              <div class="voto-contador" id="contador-completo">0</div>
+            </button>
+
+            <!-- BLANCO -->
+            <button type="button" class="voto-btn blanco" data-categoria="BLANCO">
+              <div class="voto-fotos">
+                <img src="assets/img/pablo-alderete.jpg" alt="Pablo Alderete" class="voto-foto" onerror="this.style.display='none'">
+                <div class="voto-foto blanco-placeholder">VOTO<br>EN<br>BLANCO</div>
+              </div>
+              <div class="voto-titulo blanco">Blanco</div>
+              <div class="voto-sub">Alderete + blanco</div>
+              <div class="voto-contador" id="contador-blanco">0</div>
+            </button>
+
           </div>
+
         </div>
 
         <!-- Abrir mesa (si no hay ninguna abierta) -->
@@ -208,6 +316,11 @@
               <h2 class="card-title">Abrir mesa para escrutinio</h2>
             </div>
             <div class="card-body">
+
+              <div id="escrutinio-bloqueado" class="alert alert-alerta mb-4 hidden">
+                🔒 <strong>Escrutinio no habilitado.</strong> El admin debe activarlo.
+              </div>
+
               <p class="text-2 mb-4">
                 Antes de cargar votos, tenés que <strong>abrir la mesa</strong>.
                 Mientras esté abierta, no vas a poder cambiar de mesa hasta cerrarla.
@@ -218,14 +331,7 @@
                   <label class="form-label" for="mesa-numero">
                     Número de mesa <span class="req">*</span>
                   </label>
-                  <input
-                    type="text"
-                    id="mesa-numero"
-                    class="form-input"
-                    placeholder="Ej: 5"
-                    inputmode="numeric"
-                    required
-                  >
+                  <input type="text" id="mesa-numero" class="form-input" placeholder="Ej: 5" inputmode="numeric" required>
                 </div>
 
                 <button type="submit" id="btn-abrir-mesa" class="btn btn-primary btn-lg btn-block">
@@ -241,30 +347,28 @@
     </div>
   </main>
 
-  <!-- Scripts -->
+  <!-- Feedback visual del tap -->
+  <div class="voto-feedback" id="voto-feedback">+1</div>
+
   <script src="assets/js/config.js"></script>
   <script src="assets/js/utils.js"></script>
   <script src="assets/js/api.js"></script>
   <script src="assets/js/auth.js"></script>
 
   <script>
-    /* ============================================================
-       Lógica del panel Puntero
-       ============================================================ */
     (async function () {
 
-      // 1. Proteger página
       const usuario = await AUTH.proteger(['PUNTERO', 'COORDINADOR', 'ADMIN']);
       if (!usuario) return;
 
-      // 2. Render header
       AUTH.renderHeaderLogo();
       AUTH.renderHeaderUsuario(usuario);
 
-      // 3. Estado
       let estadoDia = 'CERRADO';
+      let escrutinioHabilitado = false;
       let mesaActual = null;
-      let asistenciasHoy = 0;
+      let contadores = { COMPLETO: 0, CRUZADO: 0, BLANCO: 0, NULO: 0 };
+      let enviandoVoto = false;
 
       // ---------- TABS ----------
       document.querySelectorAll('.tab').forEach(tab => {
@@ -276,15 +380,19 @@
         });
       });
 
-      // ---------- VERIFICAR ESTADO DEL DÍA ----------
-      async function verificarEstadoDia() {
+      // ---------- ESTADO DEL DÍA + ESCRUTINIO ----------
+      async function verificarEstado() {
         try {
           const data = await API.estadoDia();
           estadoDia = data.estado_dia;
           actualizarEstadoDiaUI();
-        } catch (e) {
-          console.error(e);
-        }
+        } catch (e) { console.error(e); }
+
+        try {
+          const sis = await API.request('estadoSistema');
+          escrutinioHabilitado = sis.escrutinio_habilitado === 'ABIERTO';
+          actualizarEscrutinioUI();
+        } catch (e) { console.error(e); }
       }
 
       function actualizarEstadoDiaUI() {
@@ -292,23 +400,29 @@
         const texto = document.getElementById('estado-dia-texto');
         if (estadoDia === 'ABIERTO') {
           box.className = 'alert alert-exito mb-4';
-          texto.innerHTML = '✅ <strong>Día ABIERTO</strong> — Podés cargar asistencias';
+          texto.innerHTML = '✅ <strong>Día ABIERTO</strong>';
         } else {
           box.className = 'alert alert-alerta mb-4';
-          texto.innerHTML = '🔒 <strong>Día CERRADO</strong> — Esperá que el admin lo abra';
+          texto.innerHTML = '🔒 <strong>Día CERRADO</strong>';
+        }
+      }
+
+      function actualizarEscrutinioUI() {
+        const bloqueado = document.getElementById('escrutinio-bloqueado');
+        const btnAbrir = document.getElementById('btn-abrir-mesa');
+        if (!escrutinioHabilitado && !mesaActual) {
+          bloqueado.classList.remove('hidden');
+          btnAbrir.disabled = true;
+        } else {
+          bloqueado.classList.add('hidden');
+          btnAbrir.disabled = false;
         }
       }
 
       // ---------- ASISTENCIA ----------
-      const formAsistencia = document.getElementById('form-asistencia');
-
-      formAsistencia.addEventListener('submit', async (e) => {
+      document.getElementById('form-asistencia').addEventListener('submit', async (e) => {
         e.preventDefault();
-
-        if (estadoDia !== 'ABIERTO') {
-          UI.toast('El día no está abierto', 'alerta');
-          return;
-        }
+        if (estadoDia !== 'ABIERTO') { UI.toast('El día no está abierto', 'alerta'); return; }
 
         const btn = document.getElementById('btn-asistencia');
         const mesa = document.getElementById('asist-mesa').value.trim();
@@ -316,73 +430,45 @@
         const dni = document.getElementById('asist-dni').value.trim();
         const obs = document.getElementById('asist-obs').value.trim();
 
-        if (!mesa) {
-          UI.toast('Ingresá el número de mesa', 'error');
-          return;
-        }
+        if (!mesa) { UI.toast('Ingresá el número de mesa', 'error'); return; }
 
         btn.disabled = true;
         btn.innerHTML = '<span class="spinner"></span> Guardando...';
 
         try {
-          const res = await API.registrarAsistencia({
-            numero_mesa: mesa,
-            nombre_persona: nombre,
-            dni: dni,
-            observaciones: obs
-          });
-
-          if (res.duplicado) {
-            UI.toast('⚠️ Persona duplicada (ya cargada antes)', 'alerta', 5000);
-          } else {
-            UI.toast('✅ Asistencia registrada', 'exito');
-          }
-
-          // Limpiar form
-          formAsistencia.reset();
+          const res = await API.registrarAsistencia({ numero_mesa: mesa, nombre_persona: nombre, dni, observaciones: obs });
+          if (res.duplicado) UI.toast('⚠️ Persona duplicada', 'alerta', 5000);
+          else UI.toast('✅ Asistencia registrada', 'exito');
+          e.target.reset();
           document.getElementById('asist-mesa').focus();
-
-          // Actualizar lista
           cargarAsistencias();
-
         } catch (err) {
-          UI.toast(err.message || 'Error al guardar', 'error');
+          UI.toast(err.message || 'Error', 'error');
         } finally {
           btn.disabled = false;
           btn.textContent = 'Registrar asistencia';
         }
       });
 
-      // ---------- CARGAR ASISTENCIAS ----------
       async function cargarAsistencias() {
         const cont = document.getElementById('lista-asistencias');
         try {
           const asistencias = await API.misAsistencias();
-          asistenciasHoy = asistencias.length;
-          document.getElementById('contador-hoy').textContent = asistenciasHoy + ' hoy';
-
+          document.getElementById('contador-hoy').textContent = asistencias.length + ' hoy';
           if (asistencias.length === 0) {
-            cont.innerHTML = '<p class="text-2 text-center">Sin asistencias cargadas aún</p>';
+            cont.innerHTML = '<p class="text-2 text-center">Sin asistencias aún</p>';
             return;
           }
-
-          // Últimas 20, más recientes primero
           const ultimas = asistencias.slice(-20).reverse();
-
           cont.innerHTML = ultimas.map(a => `
             <div class="flex-between" style="padding: 8px 0; border-bottom: 1px solid var(--borde-2);">
               <div>
                 <div class="font-semibold">${UTILS.escaparHTML(a.nombre_persona || '(sin nombre)')}</div>
-                <div class="text-xs text-2">
-                  Mesa ${UTILS.escaparHTML(a.numero_mesa)}
-                  ${a.dni ? '· DNI ' + UTILS.escaparHTML(a.dni) : ''}
-                  · ${UTILS.formatearHora(a.hora_registro)}
-                </div>
+                <div class="text-xs text-2">Mesa ${UTILS.escaparHTML(a.numero_mesa)} · ${UTILS.formatearHora(a.hora_registro)}</div>
               </div>
-              ${a.estado === 'DUPLICADO' ? '<span class="badge badge-alerta">Dup.</span>' : '<span class="badge badge-exito">✓</span>'}
+              ${a.estado === 'DUPLICADO' ? '<span class="badge badge-alerta">Dup</span>' : '<span class="badge badge-exito">✓</span>'}
             </div>
           `).join('');
-
         } catch (err) {
           cont.innerHTML = '<p class="text-error">Error al cargar</p>';
         }
@@ -391,28 +477,21 @@
       document.getElementById('btn-refresh-asist').addEventListener('click', cargarAsistencias);
 
       // ---------- ESCRUTINIO: ABRIR MESA ----------
-      const formAbrirMesa = document.getElementById('form-abrir-mesa');
-
-      formAbrirMesa.addEventListener('submit', async (e) => {
+      document.getElementById('form-abrir-mesa').addEventListener('submit', async (e) => {
         e.preventDefault();
-
         const btn = document.getElementById('btn-abrir-mesa');
         const numero = document.getElementById('mesa-numero').value.trim();
-
-        if (!numero) {
-          UI.toast('Ingresá el número de mesa', 'error');
-          return;
-        }
+        if (!numero) { UI.toast('Ingresá el número', 'error'); return; }
 
         btn.disabled = true;
         btn.innerHTML = '<span class="spinner"></span> Abriendo...';
 
         try {
-          const res = await API.abrirMesa(usuario.id_escuela, numero);
+          await API.abrirMesa(usuario.id_escuela, numero);
           UI.toast('✅ Mesa abierta', 'exito');
           await cargarMesasAbiertas();
         } catch (err) {
-          UI.toast(err.message || 'Error al abrir mesa', 'error');
+          UI.toast(err.message || 'Error', 'error');
         } finally {
           btn.disabled = false;
           btn.textContent = 'Abrir mesa';
@@ -423,23 +502,22 @@
       document.getElementById('btn-cerrar-mesa').addEventListener('click', async () => {
         if (!mesaActual) return;
         if (!confirm('¿Cerrar la mesa ' + mesaActual.numero_mesa + '? No vas a poder cargar más votos.')) return;
-
         try {
           await API.cerrarMesa(mesaActual.id_apertura);
           UI.toast('✅ Mesa cerrada', 'exito');
           mesaActual = null;
+          contadores = { COMPLETO: 0, CRUZADO: 0, BLANCO: 0, NULO: 0 };
           await cargarMesasAbiertas();
         } catch (err) {
           UI.toast(err.message || 'Error', 'error');
         }
       });
 
-      // ---------- ESCRUTINIO: VERIFICAR MESA ----------
+      // ---------- ESCRUTINIO: CARGAR MESAS ----------
       async function cargarMesasAbiertas() {
         try {
           const mesas = await API.mesasAbiertas();
-          // Tomar la primera del usuario
-          mesaActual = mesas.find(m => m.id_usuario_apertura === usuario.id_usuario) || mesas[0] || null;
+          mesaActual = mesas.find(m => m.id_usuario_apertura === usuario.id_usuario) || null;
 
           const boxActual = document.getElementById('mesa-actual-box');
           const boxAbrir = document.getElementById('abrir-mesa-box');
@@ -449,99 +527,89 @@
             boxAbrir.classList.add('hidden');
             document.getElementById('mesa-actual-info').textContent =
               'Mesa ' + mesaActual.numero_mesa + ' · ' + UTILS.formatearHora(mesaActual.hora_apertura);
-            cargarVotosMesa();
+            await cargarContadores();
           } else {
             boxActual.classList.add('hidden');
             boxAbrir.classList.remove('hidden');
           }
+          actualizarEscrutinioUI();
         } catch (err) {
           console.error(err);
         }
       }
 
-      // ---------- ESCRUTINIO: CARGAR VOTO ----------
-      const formVoto = document.getElementById('form-voto');
-
-      formVoto.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        if (!mesaActual) {
-          UI.toast('No hay mesa abierta', 'error');
-          return;
+      // ---------- ESCRUTINIO: CARGAR CONTADORES ----------
+      async function cargarContadores() {
+        if (!mesaActual) return;
+        try {
+          const data = await API.request('contadoresMesa', { id_apertura: mesaActual.id_apertura });
+          contadores = data.contadores;
+          renderContadores();
+        } catch (err) {
+          console.error(err);
         }
+      }
 
-        const btn = document.getElementById('btn-voto');
-        const categoria = document.getElementById('voto-categoria').value;
-        const cantidad = document.getElementById('voto-cantidad').value;
-        const obs = document.getElementById('voto-obs').value.trim();
+      function renderContadores() {
+        document.getElementById('contador-cruzado').textContent  = contadores.CRUZADO  || 0;
+        document.getElementById('contador-completo').textContent = contadores.COMPLETO || 0;
+        document.getElementById('contador-blanco').textContent   = contadores.BLANCO   || 0;
+        const total = (contadores.CRUZADO || 0) + (contadores.COMPLETO || 0) + (contadores.BLANCO || 0);
+        document.getElementById('voto-total').textContent = total;
+      }
 
-        if (!categoria || !cantidad) {
-          UI.toast('Completá categoría y cantidad', 'error');
-          return;
-        }
+      // ---------- ESCRUTINIO: TAP EN BOTÓN ----------
+      document.querySelectorAll('.voto-btn').forEach(btn => {
+        btn.addEventListener('click', () => registrarTap(btn.dataset.categoria));
+      });
 
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner"></span> Guardando...';
+      async function registrarTap(categoria) {
+        if (!mesaActual) { UI.toast('No hay mesa abierta', 'error'); return; }
+        if (enviandoVoto) return;
+        if (!escrutinioHabilitado) { UI.toast('Escrutinio no habilitado', 'alerta'); return; }
+
+        enviandoVoto = true;
+
+        // Optimistic UI: sumar localmente ya
+        contadores[categoria] = (contadores[categoria] || 0) + 1;
+        renderContadores();
+        mostrarFeedback(categoria);
+
+        // Vibración si el celular lo soporta
+        if (navigator.vibrate) navigator.vibrate(30);
 
         try {
           await API.cargarVoto({
             id_apertura: mesaActual.id_apertura,
             categoria: categoria,
-            cantidad: cantidad,
-            observaciones: obs
+            cantidad: 1
           });
-          UI.toast('✅ Votos cargados', 'exito');
-          formVoto.reset();
-          cargarVotosMesa();
         } catch (err) {
-          UI.toast(err.message || 'Error', 'error');
+          // Si falla → revertir
+          contadores[categoria] = (contadores[categoria] || 0) - 1;
+          renderContadores();
+          UI.toast('Error al guardar: ' + (err.message || ''), 'error');
         } finally {
-          btn.disabled = false;
-          btn.textContent = 'Cargar votos';
-        }
-      });
-
-      // ---------- ESCRUTINIO: LISTAR VOTOS ----------
-      async function cargarVotosMesa() {
-        if (!mesaActual) return;
-        const cont = document.getElementById('lista-votos');
-        try {
-          const votos = await API.listarVotos();
-          const deMesa = votos.filter(v => v.id_apertura === mesaActual.id_apertura);
-
-          if (deMesa.length === 0) {
-            cont.innerHTML = '<p class="text-2 text-center">Sin votos cargados aún</p>';
-            return;
-          }
-
-          const categorias = {
-            COMPLETO: '🟢 Completo',
-            CRUZADO: '🔴 Cruzado',
-            BLANCO: '⚪ Blanco',
-            NULO: '⚫ Nulo'
-          };
-
-          cont.innerHTML = deMesa.map(v => `
-            <div class="flex-between" style="padding: 8px 0; border-bottom: 1px solid var(--borde-2);">
-              <div>
-                <div class="font-semibold">${categorias[v.categoria] || v.categoria}</div>
-                <div class="text-xs text-2">${UTILS.formatearHora(v.hora_registro)}</div>
-              </div>
-              <div class="text-xl font-bold text-rojo">${v.cantidad}</div>
-            </div>
-          `).join('');
-
-        } catch (err) {
-          cont.innerHTML = '<p class="text-error">Error al cargar</p>';
+          enviandoVoto = false;
         }
       }
 
+      function mostrarFeedback(categoria) {
+        const fb = document.getElementById('voto-feedback');
+        fb.textContent = '+1';
+        fb.className = 'voto-feedback visible';
+        if (categoria === 'COMPLETO') fb.classList.add('completo');
+        if (categoria === 'BLANCO')   fb.classList.add('blanco');
+        clearTimeout(window._fbTimer);
+        window._fbTimer = setTimeout(() => { fb.classList.remove('visible'); }, 400);
+      }
+
       // ---------- INICIALIZAR ----------
-      await verificarEstadoDia();
+      await verificarEstado();
       await cargarAsistencias();
       await cargarMesasAbiertas();
 
-      // Auto-refresh del estado del día cada 30s
-      setInterval(verificarEstadoDia, 30000);
+      setInterval(verificarEstado, 30000);
 
     })();
   </script>
