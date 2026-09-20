@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#D32F2F">
+  <title>Coordinador — Control Electoral 2026</title>
+
+  <link rel="icon" type="image/png" href="assets/img/logo-lista1.png">
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/components.css">
+  <link rel="stylesheet" href="assets/css/layout.css">
+  <link rel="stylesheet" href="assets/css/dashboard.css">
+</head>
+<body>
+
+  <header class="header">
+    <div class="container header-inner">
+      <div class="header-logo" id="header-logo"></div>
+      <div class="header-user" id="header-user"></div>
+    </div>
+  </header>
+
+  <main class="main">
+    <div class="container">
+
+      <div class="page-header">
+        <h1 class="page-title">Panel de Coordinación</h1>
+        <p class="page-subtitle" id="info-colegio">Cargando...</p>
+      </div>
+
+      <!-- Estado del día -->
+      <div id="estado-dia-box" class="dia-status mb-4">
+        <div>
+          <strong id="estado-dia-titulo">Cargando...</strong>
+          <div class="text-xs" id="estado-dia-sub"></div>
+        </div>
+        <span class="badge" id="estado-dia-badge">—</span>
+      </div>
+
+      <!-- KPIs -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">Asistencias</div>
+          <div class="kpi-value rojo" id="kpi-asistencias">0</div>
+          <div class="kpi-sub">Registradas</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Votos totales</div>
+          <div class="kpi-value" id="kpi-votos">0</div>
+          <div class="kpi-sub">En escrutinio</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Punteros activos</div>
+          <div class="kpi-value info" id="kpi-punteros">0</div>
+          <div class="kpi-sub">Con registros</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Mesas abiertas</div>
+          <div class="kpi-value exito" id="kpi-mesas">0</div>
+          <div class="kpi-sub">En escrutinio</div>
+        </div>
+      </div>
+
+      <!-- Ranking -->
+      <div class="grid grid-2">
+
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">🏆 Ranking punteros</h2>
+          </div>
+          <div class="card-body" id="ranking-punteros">
+            <div class="empty-state">
+              <p>Cargando...</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">🗳️ Votos por categoría</h2>
+          </div>
+          <div class="card-body" id="votos-categoria">
+            <div class="empty-state">
+              <p>Cargando...</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Últimos registros -->
+      <div class="card mt-5">
+        <div class="card-header">
+          <h2 class="card-title">📋 Últimas asistencias</h2>
+          <button class="btn btn-ghost btn-sm" id="btn-refresh">🔄</button>
+        </div>
+        <div class="card-body" id="ultimas-asistencias">
+          <div class="empty-state">
+            <p>Cargando...</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/utils.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/auth.js"></script>
+
+  <script>
+    (async function () {
+
+      const usuario = await AUTH.proteger(['COORDINADOR', 'ADMIN']);
+      if (!usuario) return;
+
+      AUTH.renderHeaderLogo();
+      AUTH.renderHeaderUsuario(usuario);
+
+      // ---------- INFO COLEGIO ----------
+      async function cargarInfoColegio() {
+        try {
+          const escuelas = await API.listarEscuelas();
+          const mi = escuelas.find(e => e.id_escuela === usuario.id_escuela);
+          document.getElementById('info-colegio').textContent =
+            mi ? mi.nombre + ' · ' + (mi.zona || 'Sin zona') : usuario.id_escuela;
+        } catch (e) { console.error(e); }
+      }
+
+      // ---------- ESTADO DEL DÍA ----------
+      async function cargarEstadoDia() {
+        try {
+          const data = await API.estadoDia();
+          const box = document.getElementById('estado-dia-box');
+          const titulo = document.getElementById('estado-dia-titulo');
+          const sub = document.getElementById('estado-dia-sub');
+          const badge = document.getElementById('estado-dia-badge');
+
+          if (data.estado_dia === 'ABIERTO') {
+            box.className = 'dia-status abierto mb-4';
+            titulo.textContent = '✅ Día ABIERTO';
+            sub.textContent = 'Los punteros pueden cargar asistencias';
+            badge.textContent = 'ABIERTO';
+            badge.className = 'badge badge-exito';
+          } else {
+            box.className = 'dia-status cerrado mb-4';
+            titulo.textContent = '🔒 Día CERRADO';
+            sub.textContent = 'Esperando apertura del admin';
+            badge.textContent = 'CERRADO';
+            badge.className = 'badge badge-alerta';
+          }
+        } catch (e) { console.error(e); }
+      }
+
+      // ---------- KPIs ----------
+      async function cargarKPIs() {
+        try {
+          const [asistencias, votos, mesas] = await Promise.all([
+            API.listarAsistencias(),
+            API.listarVotos(),
+            API.mesasAbiertas()
+          ]);
+
+          const mias = asistencias.filter(a => a.id_escuela === usuario.id_escuela && a.estado === 'VALIDO');
+          const misVotos = votos.filter(v => v.id_escuela === usuario.id_escuela && v.estado === 'VALIDO');
+          const misMesas = mesas.filter(m => m.id_escuela === usuario.id_escuela);
+
+          const totalVotos = misVotos.reduce((s, v) => s + Number(v.cantidad || 0), 0);
+          const punterosUnicos = new Set(mias.map(a => a.id_usuario)).size;
+
+          document.getElementById('kpi-asistencias').textContent = UTILS.formatearNumero(mias.length);
+          document.getElementById('kpi-votos').textContent = UTILS.formatearNumero(totalVotos);
+          document.getElementById('kpi-punteros').textContent = punterosUnicos;
+          document.getElementById('kpi-mesas').textContent = misMesas.length;
+
+          // Votos por categoría
+          const cat = { COMPLETO: 0, CRUZADO: 0, BLANCO: 0, NULO: 0 };
+          misVotos.forEach(v => { cat[v.categoria] = (cat[v.categoria] || 0) + Number(v.cantidad || 0); });
+          renderCategorias(cat);
+
+        } catch (e) { console.error(e); }
+      }
+
+      function renderCategorias(cat) {
+        const cont = document.getElementById('votos-categoria');
+        const total = Object.values(cat).reduce((a, b) => a + b, 0);
+
+        if (total === 0) {
+          cont.innerHTML = '<div class="empty-state"><p>Sin votos cargados aún</p></div>';
+          return;
+        }
+
+        const etiquetas = {
+          COMPLETO: '🟢 Completo',
+          CRUZADO: '🔴 Cruzado',
+          BLANCO: '⚪ Blanco',
+          NULO: '⚫ Nulo'
+        };
+        const clases = {
+          COMPLETO: 'completo',
+          CRUZADO: 'cruzado',
+          BLANCO: 'blanco',
+          NULO: 'nulo'
+        };
+
+        cont.innerHTML = Object.keys(cat).map(k => {
+          const pct = total > 0 ? (cat[k] / total) * 100 : 0;
+          return `
+            <div class="cat-barra">
+              <div class="cat-label">${etiquetas[k]}</div>
+              <div class="cat-track">
+                <div class="cat-fill ${clases[k]}" style="width: ${pct}%"></div>
+              </div>
+              <div class="cat-total">${cat[k]}</div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // ---------- RANKING PUNTEROS ----------
+      async function cargarRanking() {
+        const cont = document.getElementById('ranking-punteros');
+        try {
+          const [asistencias, usuarios] = await Promise.all([
+            API.listarAsistencias(),
+            API.listarUsuarios().catch(() => [])
+          ]);
+
+          const mias = asistencias.filter(a =>
+            a.id_escuela === usuario.id_escuela &&
+            a.estado === 'VALIDO'
+          );
+
+          const conteo = {};
+          mias.forEach(a => { conteo[a.id_usuario] = (conteo[a.id_usuario] || 0) + 1; });
+
+          const arr = Object.keys(conteo).map(id => {
+            const u = usuarios.find(x => x.id_usuario === id);
+            return {
+              id,
+              nombre: u ? u.nombre_completo : id,
+              rol: u ? u.rol : '—',
+              asistencias: conteo[id]
+            };
+          }).sort((a, b) => b.asistencias - a.asistencias);
+
+          if (arr.length === 0) {
+            cont.innerHTML = '<div class="empty-state"><p>Sin registros aún</p></div>';
+            return;
+          }
+
+          cont.innerHTML = arr.slice(0, 10).map((p, i) => {
+            const clase = i === 0 ? 'top1' : i === 1 ? 'top2' : i === 2 ? 'top3' : '';
+            return `
+              <div class="ranking-item">
+                <div class="ranking-pos ${clase}">${i + 1}</div>
+                <div class="ranking-info">
+                  <div class="ranking-nombre">${UTILS.escaparHTML(p.nombre)}</div>
+                  <div class="ranking-meta">${UTILS.escaparHTML(p.rol)}</div>
+                </div>
+                <div class="ranking-valor">${p.asistencias}</div>
+              </div>
+            `;
+          }).join('');
+        } catch (e) {
+          cont.innerHTML = '<div class="empty-state"><p>Error al cargar</p></div>';
+        }
+      }
+
+      // ---------- ÚLTIMAS ASISTENCIAS ----------
+      async function cargarUltimasAsistencias() {
+        const cont = document.getElementById('ultimas-asistencias');
+        try {
+          const asistencias = await API.listarAsistencias();
+          const mias = asistencias
+            .filter(a => a.id_escuela === usuario.id_escuela)
+            .slice(-20)
+            .reverse();
+
+          if (mias.length === 0) {
+            cont.innerHTML = '<div class="empty-state"><p>Sin asistencias aún</p></div>';
+            return;
+          }
+
+          cont.innerHTML = mias.map(a => `
+            <div class="flex-between" style="padding: 8px 0; border-bottom: 1px solid var(--borde-2);">
+              <div>
+                <div class="font-semibold">${UTILS.escaparHTML(a.nombre_persona || '(sin nombre)')}</div>
+                <div class="text-xs text-2">
+                  Mesa ${UTILS.escaparHTML(a.numero_mesa)}
+                  ${a.dni ? '· DNI ' + UTILS.escaparHTML(a.dni) : ''}
+                  · ${UTILS.formatearHora(a.hora_registro)}
+                </div>
+              </div>
+              ${a.estado === 'DUPLICADO' ? '<span class="badge badge-alerta">Dup</span>' : '<span class="badge badge-exito">✓</span>'}
+            </div>
+          `).join('');
+        } catch (e) {
+          cont.innerHTML = '<div class="empty-state"><p>Error al cargar</p></div>';
+        }
+      }
+
+      // ---------- REFRESH ----------
+      document.getElementById('btn-refresh').addEventListener('click', async () => {
+        await Promise.all([cargarKPIs(), cargarRanking(), cargarUltimasAsistencias()]);
+        UI.toast('Datos actualizados', 'info');
+      });
+
+      // ---------- INICIALIZAR ----------
+      await cargarInfoColegio();
+      await cargarEstadoDia();
+      await cargarKPIs();
+      await cargarRanking();
+      await cargarUltimasAsistencias();
+
+      setInterval(() => {
+        cargarEstadoDia();
+        cargarKPIs();
+      }, 30000);
+
+    })();
+  </script>
+
+</body>
+</html>
