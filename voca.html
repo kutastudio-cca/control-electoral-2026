@@ -291,19 +291,24 @@
       }
 
       // ---------- CARGAR LISTAS ----------
-      async function cargarListas() {
+            async function cargarListas() {
         try {
           const todas = await API.listarListas();
           intendentes = todas.filter(l => l.categoria === 'INTENDENTE').sort((a,b) => a.orden - b.orden);
-          concejales  = todas.filter(l => l.categoria === 'CONCEJAL').sort((a,b) => {
-            if (a.nombre_lista !== b.nombre_lista) return a.nombre_lista.localeCompare(b.nombre_lista);
-            return a.orden - b.orden;
-          });
-          renderGrid('grid-intendentes', intendentes, 'intendente');
-          renderGrid('grid-concejales', concejales, 'concejal');
+
+          const concejalesL1  = todas
+            .filter(l => l.categoria === 'CONCEJAL' && l.color === 'rojo')
+            .sort((a,b) => a.orden - b.orden);
+
+          const concejalesL20 = todas
+            .filter(l => l.categoria === 'CONCEJAL' && l.color === 'amarillo')
+            .sort((a,b) => a.orden - b.orden);
+
+          renderGrid('grid-intendentes',    intendentes,    'intendente');
+          renderGrid('grid-concejales-l1',  concejalesL1,   'concejal');
+          renderGrid('grid-concejales-l20', concejalesL20,  'concejal');
         } catch (e) { console.error(e); }
       }
-
       function renderGrid(containerId, items, tipo) {
         const cont = document.getElementById(containerId);
         if (items.length === 0) {
@@ -342,8 +347,8 @@
       }
 
       function seleccionar(card, tipo) {
-        const containerId = tipo === 'intendente' ? 'grid-intendentes' : 'grid-concejales';
-        const container = document.getElementById(containerId);
+               // Detectar en qué contenedor está la card clickeada
+        const container = card.closest('.candidato-grid');
 
         // Quitar selección previa
         container.querySelectorAll('.candidato-card').forEach(c => c.classList.remove('seleccionado'));
