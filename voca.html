@@ -140,6 +140,30 @@
       color: var(--texto);
       line-height: 1.2;
     }
+        /* Colores de las secciones */
+    .seccion-titulo.seccion-lista1 {
+      color: var(--rojo-600);
+      border-bottom-color: var(--rojo-600);
+    }
+    .seccion-titulo.seccion-lista20 {
+      color: var(--amarillo-800);
+      border-bottom-color: var(--amarillo-600);
+    }
+
+    .dot-list1,
+    .dot-list20 {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: 6px;
+    }
+    .dot-list1  { background: var(--rojo-600); }
+    .dot-list20 { background: var(--amarillo-600); }
+
+    /* Fondo suave para la sección de cada lista */
+    #grid-concejales-l1  { padding: var(--esp-2); background: var(--rojo-50);     border-radius: var(--radio); }
+    #grid-concejales-l20 { padding: var(--esp-2); background: var(--amarillo-50); border-radius: var(--radio); }
   </style>
 </head>
 <body>
