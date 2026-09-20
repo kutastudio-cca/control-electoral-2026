@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#D32F2F">
+  <title>Puesto de Control — Control Electoral 2026</title>
+
+  <link rel="icon" type="image/png" href="assets/img/logo-lista1.png">
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/components.css">
+  <link rel="stylesheet" href="assets/css/layout.css">
+  <link rel="stylesheet" href="assets/css/dashboard.css">
+</head>
+<body>
+
+  <header class="header">
+    <div class="container header-inner">
+      <div class="header-logo" id="header-logo"></div>
+      <div class="header-user" id="header-user"></div>
+    </div>
+  </header>
+
+  <main class="main">
+    <div class="container container-md">
+
+      <div id="estado-dia-box" class="alert alert-info mb-4">
+        <span id="estado-dia-texto">Verificando estado del día...</span>
+      </div>
+
+      <!-- FORMULARIO -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <h2 class="card-title">🎯 Registrar paso por PC</h2>
+          <span class="badge badge-rojo" id="contador-hoy">0 hoy</span>
+        </div>
+        <div class="card-body">
+          <form id="form-pc" autocomplete="off">
+
+            <div class="grid grid-2" style="gap: var(--esp-3);">
+              <div class="form-group">
+                <label class="form-label" for="pc-nombre">
+                  Nombre <span class="req">*</span>
+                </label>
+                <input type="text" id="pc-nombre" class="form-input" placeholder="Ej: Juan" autocapitalize="words" required autofocus>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="pc-apellido">
+                  Apellido <span class="req">*</span>
+                </label>
+                <input type="text" id="pc-apellido" class="form-input" placeholder="Ej: Pérez" autocapitalize="words" required>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="pc-dni">
+                DNI <span class="text-3">(opcional)</span>
+              </label>
+              <input type="text" id="pc-dni" class="form-input" placeholder="Ej: 12345678" inputmode="numeric">
+            </div>
+
+            <div class="grid grid-2" style="gap: var(--esp-3);">
+              <div class="form-group">
+                <label class="form-label" for="pc-colegio">
+                  Colegio <span class="req">*</span>
+                </label>
+                <select id="pc-colegio" class="form-select" required>
+                  <option value="">— Seleccionar —</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="pc-mesa">
+                  Número de mesa <span class="text-3">(opcional)</span>
+                </label>
+                <input type="text" id="pc-mesa" class="form-input" placeholder="Ej: 5" inputmode="numeric">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="pc-obs">
+                Observaciones <span class="text-3">(opcional)</span>
+              </label>
+              <textarea id="pc-obs" class="form-textarea" placeholder="Ej: vino con familia..." rows="2"></textarea>
+            </div>
+
+            <button type="submit" id="btn-pc" class="btn btn-primary btn-lg btn-block">
+              Registrar persona
+            </button>
+
+          </form>
+        </div>
+      </div>
+
+      <!-- ÚLTIMAS CARGAS -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Últimas personas registradas</h2>
+          <button class="btn btn-ghost btn-sm" id="btn-refresh">🔄</button>
+        </div>
+        <div class="card-body" id="lista-pc">
+          <p class="text-2 text-center">Cargando...</p>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/utils.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/auth.js"></script>
+
+  <script>
+    (async function () {
+
+      const usuario = await AUTH.proteger(['PC', 'ADMIN']);
+      if (!usuario) return;
+
+      AUTH.renderHeaderLogo();
+      AUTH.renderHeaderUsuario(usuario);
+
+      let estadoDia = 'CERRADO';
+      let escuelas = [];
+
+      // ---------- ESTADO DEL DÍA ----------
+      async function verificarEstadoDia() {
+        try {
+          const data = await API.estadoDia();
+          estadoDia = data.estado_dia;
+          const box = document.getElementById('estado-dia-box');
+          const texto = document.getElementById('estado-dia-texto');
+          if (estadoDia === 'ABIERTO') {
+            box.className = 'alert alert-exito mb-4';
+            texto.innerHTML = '✅ <strong>Día ABIERTO</strong> — Podés registrar personas';
+          } else {
+            box.className = 'alert alert-alerta mb-4';
+            texto.innerHTML = '🔒 <strong>Día CERRADO</strong>';
+          }
+        } catch (e) { console.error(e); }
+      }
+
+      // ---------- CARGAR COLEGIOS ----------
+      async function cargarEscuelas() {
+        try {
+          escuelas = await API.listarEscuelas();
+          const sel = document.getElementById('pc-colegio');
+          sel.innerHTML = '<option value="">— Seleccionar —</option>';
+          escuelas.forEach(e => {
+            const opt = document.createElement('option');
+            opt.value = e.id_escuela;
+            opt.textContent = e.nombre;
+            sel.appendChild(opt);
+          });
+        } catch (e) { console.error(e); }
+      }
+
+      // ---------- REGISTRAR ----------
+      document.getElementById('form-pc').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (estadoDia !== 'ABIERTO') { UI.toast('El día no está abierto', 'alerta'); return; }
+
+        const btn = document.getElementById('btn-pc');
+        const nombre = document.getElementById('pc-nombre').value.trim();
+        const apellido = document.getElementById('pc-apellido').value.trim();
+        const dni = document.getElementById('pc-dni').value.trim();
+        const colegio = document.getElementById('pc-colegio').value;
+        const mesa = document.getElementById('pc-mesa').value.trim();
+        const obs = document.getElementById('pc-obs').value.trim();
+
+        if (!nombre || !apellido || !colegio) {
+          UI.toast('Completá nombre, apellido y colegio', 'error');
+          return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span> Guardando...';
+
+        try {
+          await API.request('registrarPC', {
+            nombre, apellido, dni, colegio, mesa, observaciones: obs
+          });
+          UI.toast('✅ Persona registrada', 'exito');
+
+          // Limpiar solo nombre, apellido, dni, obs (mantener colegio y mesa)
+          document.getElementById('pc-nombre').value = '';
+          document.getElementById('pc-apellido').value = '';
+          document.getElementById('pc-dni').value = '';
+          document.getElementById('pc-obs').value = '';
+          document.getElementById('pc-nombre').focus();
+
+          cargarRegistros();
+        } catch (err) {
+          UI.toast(err.message || 'Error', 'error');
+        } finally {
+          btn.disabled = false;
+          btn.textContent = 'Registrar persona';
+        }
+      });
+
+      // ---------- LISTAR MIS REGISTROS ----------
+      async function cargarRegistros() {
+        const cont = document.getElementById('lista-pc');
+        try {
+          const registros = await API.request('misRegistrosPC');
+          document.getElementById('contador-hoy').textContent = registros.length + ' hoy';
+
+          if (registros.length === 0) {
+            cont.innerHTML = '<p class="text-2 text-center">Sin registros aún</p>';
+            return;
+          }
+
+          const ultimos = registros.slice(-20).reverse();
+          cont.innerHTML = ultimos.map(r => {
+            const esc = escuelas.find(e => e.id_escuela === r.colegio);
+            return `
+              <div class="flex-between" style="padding: 10px 0; border-bottom: 1px solid var(--borde-2);">
+                <div>
+                  <div class="font-semibold">${UTILS.escaparHTML(r.apellido)}, ${UTILS.escaparHTML(r.nombre)}</div>
+                  <div class="text-xs text-2">
+                    ${esc ? UTILS.escaparHTML(esc.nombre) : UTILS.escaparHTML(r.colegio)}
+                    ${r.mesa ? ' · Mesa ' + UTILS.escaparHTML(r.mesa) : ''}
+                    ${r.dni ? ' · DNI ' + UTILS.escaparHTML(r.dni) : ''}
+                    · ${UTILS.formatearHora(r.hora_registro)}
+                  </div>
+                </div>
+                <span class="badge badge-exito">✓</span>
+              </div>
+            `;
+          }).join('');
+        } catch (err) {
+          cont.innerHTML = '<p class="text-error">Error al cargar</p>';
+        }
+      }
+
+      document.getElementById('btn-refresh').addEventListener('click', cargarRegistros);
+
+      // ---------- INICIALIZAR ----------
+      await verificarEstadoDia();
+      await cargarEscuelas();
+      await cargarRegistros();
+
+      setInterval(verificarEstadoDia, 30000);
+    })();
+  </script>
+
+</body>
+</html>
