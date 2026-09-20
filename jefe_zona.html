@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#D32F2F">
+  <title>Jefe de Zona — Control Electoral 2026</title>
+
+  <link rel="icon" type="image/png" href="assets/img/logo-lista1.png">
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/components.css">
+  <link rel="stylesheet" href="assets/css/layout.css">
+  <link rel="stylesheet" href="assets/css/dashboard.css">
+</head>
+<body>
+
+  <header class="header">
+    <div class="container header-inner">
+      <div class="header-logo" id="header-logo"></div>
+      <div class="header-user" id="header-user"></div>
+    </div>
+  </header>
+
+  <main class="main">
+    <div class="container container-md">
+
+      <div id="estado-dia-box" class="alert alert-info mb-4">
+        <span id="estado-dia-texto">Verificando estado del día...</span>
+      </div>
+
+      <!-- KPIs personales -->
+      <div class="kpi-grid mb-4">
+        <div class="kpi-card">
+          <div class="kpi-label">Envíos hoy</div>
+          <div class="kpi-value rojo" id="kpi-envios">0</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Personas enviadas</div>
+          <div class="kpi-value" id="kpi-personas">0</div>
+        </div>
+      </div>
+
+      <!-- FORMULARIO -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <h2 class="card-title">📦 Registrar envío</h2>
+        </div>
+        <div class="card-body">
+          <form id="form-jz" autocomplete="off">
+
+            <div class="form-group">
+              <label class="form-label" for="jz-apellido">
+                Apellido / Familia <span class="req">*</span>
+              </label>
+              <input type="text" id="jz-apellido" class="form-input" placeholder="Ej: González" autocapitalize="words" required autofocus>
+            </div>
+
+            <div class="grid grid-2" style="gap: var(--esp-3);">
+              <div class="form-group">
+                <label class="form-label" for="jz-cantidad">
+                  Cantidad de personas <span class="req">*</span>
+                </label>
+                <input type="number" id="jz-cantidad" class="form-input" min="1" inputmode="numeric" placeholder="Ej: 4" required>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="jz-zona">
+                  Zona / Barrio <span class="req">*</span>
+                </label>
+                <input type="text" id="jz-zona" class="form-input" placeholder="Ej: Centro" autocapitalize="words" required>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="jz-tipo">
+                Tipo de envío <span class="req">*</span>
+              </label>
+              <select id="jz-tipo" class="form-select" required>
+                <option value="CHOFER" selected>🚗 Por chofer</option>
+                <option value="PROPIO">🚶 Por cuenta propia</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="jz-obs">
+                Observaciones <span class="text-3">(opcional)</span>
+              </label>
+              <textarea id="jz-obs" class="form-textarea" placeholder="Ej: familia numerosa..." rows="2"></textarea>
+            </div>
+
+            <button type="submit" id="btn-jz" class="btn btn-primary btn-lg btn-block">
+              Registrar envío
+            </button>
+
+          </form>
+        </div>
+      </div>
+
+      <!-- ÚLTIMAS CARGAS -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Mis envíos de hoy</h2>
+          <button class="btn btn-ghost btn-sm" id="btn-refresh">🔄</button>
+        </div>
+        <div class="card-body" id="lista-jz">
+          <p class="text-2 text-center">Cargando...</p>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/utils.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/auth.js"></script>
+
+  <script>
+    (async function () {
+
+      const usuario = await AUTH.proteger(['JEFE_ZONA', 'ADMIN']);
+      if (!usuario) return;
+
+      AUTH.renderHeaderLogo();
+      AUTH.renderHeaderUsuario(usuario);
+
+      let estadoDia = 'CERRADO';
+
+      // ---------- ESTADO DEL DÍA ----------
+      async function verificarEstadoDia() {
+        try {
+          const data = await API.estadoDia();
+          estadoDia = data.estado_dia;
+          const box = document.getElementById('estado-dia-box');
+          const texto = document.getElementById('estado-dia-texto');
+          if (estadoDia === 'ABIERTO') {
+            box.className = 'alert alert-exito mb-4';
+            texto.innerHTML = '✅ <strong>Día ABIERTO</strong> — Podés registrar envíos';
+          } else {
+            box.className = 'alert alert-alerta mb-4';
+            texto.innerHTML = '🔒 <strong>Día CERRADO</strong>';
+          }
+        } catch (e) { console.error(e); }
+      }
+
+      // ---------- REGISTRAR ----------
+      document.getElementById('form-jz').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (estadoDia !== 'ABIERTO') { UI.toast('El día no está abierto', 'alerta'); return; }
+
+        const btn = document.getElementById('btn-jz');
+        const apellido = document.getElementById('jz-apellido').value.trim();
+        const cantidad = document.getElementById('jz-cantidad').value;
+        const zona = document.getElementById('jz-zona').value.trim();
+        const tipo = document.getElementById('jz-tipo').value;
+        const obs = document.getElementById('jz-obs').value.trim();
+
+        if (!apellido || !cantidad || !zona) {
+          UI.toast('Completá apellido, cantidad y zona', 'error');
+          return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span> Guardando...';
+
+        try {
+          await API.request('registrarEnvioZona', {
+            apellido_familia: apellido,
+            cantidad_personas: cantidad,
+            zona_barrio: zona,
+            tipo_envio: tipo,
+            observaciones: obs
+          });
+          UI.toast('✅ Envío registrado', 'exito');
+
+          // Limpiar
+          document.getElementById('jz-apellido').value = '';
+          document.getElementById('jz-cantidad').value = '';
+          document.getElementById('jz-obs').value = '';
+          document.getElementById('jz-apellido').focus();
+
+          cargarEnvios();
+        } catch (err) {
+          UI.toast(err.message || 'Error', 'error');
+        } finally {
+          btn.disabled = false;
+          btn.textContent = 'Registrar envío';
+        }
+      });
+
+      // ---------- LISTAR MIS ENVÍOS ----------
+      async function cargarEnvios() {
+        const cont = document.getElementById('lista-jz');
+        try {
+          const envios = await API.request('misEnviosZona');
+          const totalPersonas = envios.reduce((s, e) => s + Number(e.cantidad_personas || 0), 0);
+
+          document.getElementById('kpi-envios').textContent = envios.length;
+          document.getElementById('kpi-personas').textContent = totalPersonas;
+
+          if (envios.length === 0) {
+            cont.innerHTML = '<p class="text-2 text-center">Sin envíos aún</p>';
+            return;
+          }
+
+          const ultimos = envios.slice(-20).reverse();
+          cont.innerHTML = ultimos.map(e => `
+            <div class="flex-between" style="padding: 10px 0; border-bottom: 1px solid var(--borde-2);">
+              <div>
+                <div class="font-semibold">Familia ${UTILS.escaparHTML(e.apellido_familia)}</div>
+                <div class="text-xs text-2">
+                  ${UTILS.escaparHTML(e.zona_barrio)}
+                  · ${e.tipo_envio === 'CHOFER' ? '🚗 Chofer' : '🚶 Propio'}
+                  · ${UTILS.formatearHora(e.hora_registro)}
+                </div>
+              </div>
+              <div class="text-xl font-bold text-rojo">${e.cantidad_personas}</div>
+            </div>
+          `).join('');
+        } catch (err) {
+          cont.innerHTML = '<p class="text-error">Error al cargar</p>';
+        }
+      }
+
+      document.getElementById('btn-refresh').addEventListener('click', cargarEnvios);
+
+      // ---------- INICIALIZAR ----------
+      await verificarEstadoDia();
+      await cargarEnvios();
+
+      setInterval(verificarEstadoDia, 30000);
+    })();
+  </script>
+
+</body>
+</html>
