@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#D32F2F">
+  <title>Puntero — Control Electoral 2026</title>
+
+  <link rel="icon" type="image/png" href="assets/img/logo-lista1.png">
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/components.css">
+  <link rel="stylesheet" href="assets/css/layout.css">
+  <link rel="stylesheet" href="assets/css/dashboard.css">
+</head>
+<body>
+
+  <header class="header">
+    <div class="container header-inner">
+      <div class="header-logo" id="header-logo"></div>
+      <div class="header-user" id="header-user"></div>
+    </div>
+  </header>
+
+  <main class="main">
+    <div class="container container-md">
+
+      <!-- Estado del día -->
+      <div id="estado-dia-box" class="alert alert-info mb-4">
+        <span id="estado-dia-texto">Verificando estado del día...</span>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs">
+        <button class="tab active" data-tab="asistencia">📋 Asistencia</button>
+        <button class="tab" data-tab="escrutinio">🗳️ Escrutinio</button>
+      </div>
+
+      <!-- ============================================
+           TAB: ASISTENCIA
+           ============================================ -->
+      <section id="tab-asistencia" class="tab-content">
+
+        <div class="card mb-4">
+          <div class="card-header">
+            <h2 class="card-title">Registrar asistencia</h2>
+            <span class="badge badge-rojo" id="contador-hoy">0 hoy</span>
+          </div>
+          <div class="card-body">
+            <form id="form-asistencia">
+
+              <div class="form-group">
+                <label class="form-label" for="asist-mesa">
+                  Número de mesa <span class="req">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="asist-mesa"
+                  class="form-input"
+                  placeholder="Ej: 5"
+                  inputmode="numeric"
+                  required
+                >
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="asist-nombre">
+                  Nombre y apellido <span class="text-3">(opcional)</span>
+                </label>
+                <input
+                  type="text"
+                  id="asist-nombre"
+                  class="form-input"
+                  placeholder="Ej: Juan Pérez"
+                  autocapitalize="words"
+                >
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="asist-dni">
+                  DNI <span class="text-3">(opcional)</span>
+                </label>
+                <input
+                  type="text"
+                  id="asist-dni"
+                  class="form-input"
+                  placeholder="Ej: 12345678"
+                  inputmode="numeric"
+                >
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="asist-obs">
+                  Observaciones <span class="text-3">(opcional)</span>
+                </label>
+                <textarea
+                  id="asist-obs"
+                  class="form-textarea"
+                  placeholder="Ej: necesitaba transporte, vino con familia..."
+                  rows="2"
+                ></textarea>
+              </div>
+
+              <button type="submit" id="btn-asistencia" class="btn btn-primary btn-lg btn-block">
+                Registrar asistencia
+              </button>
+
+            </form>
+          </div>
+        </div>
+
+        <!-- Últimas asistencias -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Últimas asistencias</h2>
+            <button class="btn btn-ghost btn-sm" id="btn-refresh-asist">🔄</button>
+          </div>
+          <div class="card-body" id="lista-asistencias">
+            <p class="text-2 text-center">Cargando...</p>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ============================================
+           TAB: ESCRUTINIO
+           ============================================ -->
+      <section id="tab-escrutinio" class="tab-content hidden">
+
+        <!-- Mesa actual -->
+        <div id="mesa-actual-box" class="hidden">
+          <div class="alert alert-exito mb-4">
+            <div class="flex-between w-full">
+              <div>
+                <strong>Mesa abierta:</strong>
+                <span id="mesa-actual-info"></span>
+              </div>
+              <button class="btn btn-danger btn-sm" id="btn-cerrar-mesa">Cerrar mesa</button>
+            </div>
+          </div>
+
+          <div class="card mb-4">
+            <div class="card-header">
+              <h2 class="card-title">Cargar votos</h2>
+            </div>
+            <div class="card-body">
+              <form id="form-voto">
+
+                <div class="form-group">
+                  <label class="form-label" for="voto-categoria">
+                    Categoría <span class="req">*</span>
+                  </label>
+                  <select id="voto-categoria" class="form-select" required>
+                    <option value="">— Seleccionar —</option>
+                    <option value="COMPLETO">🟢 Completo (Concejal nuestro + Intendente nuestro)</option>
+                    <option value="CRUZADO">🔴 Cruzado (Concejal nuestro + Intendente opositor)</option>
+                    <option value="BLANCO">⚪ Blanco (Concejal nuestro + Intendente en blanco)</option>
+                    <option value="NULO">⚫ Nulo / Impugnado</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="voto-cantidad">
+                    Cantidad <span class="req">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    id="voto-cantidad"
+                    class="form-input"
+                    min="1"
+                    inputmode="numeric"
+                    placeholder="Ej: 25"
+                    required
+                  >
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="voto-obs">Observaciones</label>
+                  <input
+                    type="text"
+                    id="voto-obs"
+                    class="form-input"
+                    placeholder="Opcional"
+                  >
+                </div>
+
+                <button type="submit" id="btn-voto" class="btn btn-primary btn-lg btn-block">
+                  Cargar votos
+                </button>
+
+              </form>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h2 class="card-title">Votos cargados en esta mesa</h2>
+            </div>
+            <div class="card-body" id="lista-votos">
+              <p class="text-2 text-center">Sin votos cargados aún</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Abrir mesa (si no hay ninguna abierta) -->
+        <div id="abrir-mesa-box">
+          <div class="card">
+            <div class="card-header">
+              <h2 class="card-title">Abrir mesa para escrutinio</h2>
+            </div>
+            <div class="card-body">
+              <p class="text-2 mb-4">
+                Antes de cargar votos, tenés que <strong>abrir la mesa</strong>.
+                Mientras esté abierta, no vas a poder cambiar de mesa hasta cerrarla.
+              </p>
+
+              <form id="form-abrir-mesa">
+                <div class="form-group">
+                  <label class="form-label" for="mesa-numero">
+                    Número de mesa <span class="req">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="mesa-numero"
+                    class="form-input"
+                    placeholder="Ej: 5"
+                    inputmode="numeric"
+                    required
+                  >
+                </div>
+
+                <button type="submit" id="btn-abrir-mesa" class="btn btn-primary btn-lg btn-block">
+                  Abrir mesa
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Scripts -->
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/utils.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/auth.js"></script>
+
+  <script>
+    /* ============================================================
+       Lógica del panel Puntero
+       ============================================================ */
+    (async function () {
+
+      // 1. Proteger página
+      const usuario = await AUTH.proteger(['PUNTERO', 'COORDINADOR', 'ADMIN']);
+      if (!usuario) return;
+
+      // 2. Render header
+      AUTH.renderHeaderLogo();
+      AUTH.renderHeaderUsuario(usuario);
+
+      // 3. Estado
+      let estadoDia = 'CERRADO';
+      let mesaActual = null;
+      let asistenciasHoy = 0;
+
+      // ---------- TABS ----------
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+          document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+          tab.classList.add('active');
+          document.getElementById('tab-' + tab.dataset.tab).classList.remove('hidden');
+        });
+      });
+
+      // ---------- VERIFICAR ESTADO DEL DÍA ----------
+      async function verificarEstadoDia() {
+        try {
+          const data = await API.estadoDia();
+          estadoDia = data.estado_dia;
+          actualizarEstadoDiaUI();
+        } catch (e) {
+          console.error(e);
+        }
+      }
+
+      function actualizarEstadoDiaUI() {
+        const box = document.getElementById('estado-dia-box');
+        const texto = document.getElementById('estado-dia-texto');
+        if (estadoDia === 'ABIERTO') {
+          box.className = 'alert alert-exito mb-4';
+          texto.innerHTML = '✅ <strong>Día ABIERTO</strong> — Podés cargar asistencias';
+        } else {
+          box.className = 'alert alert-alerta mb-4';
+          texto.innerHTML = '🔒 <strong>Día CERRADO</strong> — Esperá que el admin lo abra';
+        }
+      }
+
+      // ---------- ASISTENCIA ----------
+      const formAsistencia = document.getElementById('form-asistencia');
+
+      formAsistencia.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        if (estadoDia !== 'ABIERTO') {
+          UI.toast('El día no está abierto', 'alerta');
+          return;
+        }
+
+        const btn = document.getElementById('btn-asistencia');
+        const mesa = document.getElementById('asist-mesa').value.trim();
+        const nombre = document.getElementById('asist-nombre').value.trim();
+        const dni = document.getElementById('asist-dni').value.trim();
+        const obs = document.getElementById('asist-obs').value.trim();
+
+        if (!mesa) {
+          UI.toast('Ingresá el número de mesa', 'error');
+          return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span> Guardando...';
+
+        try {
+          const res = await API.registrarAsistencia({
+            numero_mesa: mesa,
+            nombre_persona: nombre,
+            dni: dni,
+            observaciones: obs
+          });
+
+          if (res.duplicado) {
+            UI.toast('⚠️ Persona duplicada (ya cargada antes)', 'alerta', 5000);
+          } else {
+            UI.toast('✅ Asistencia registrada', 'exito');
+          }
+
+          // Limpiar form
+          formAsistencia.reset();
+          document.getElementById('asist-mesa').focus();
+
+          // Actualizar lista
+          cargarAsistencias();
+
+        } catch (err) {
+          UI.toast(err.message || 'Error al guardar', 'error');
+        } finally {
+          btn.disabled = false;
+          btn.textContent = 'Registrar asistencia';
+        }
+      });
+
+      // ---------- CARGAR ASISTENCIAS ----------
+      async function cargarAsistencias() {
+        const cont = document.getElementById('lista-asistencias');
+        try {
+          const asistencias = await API.misAsistencias();
+          asistenciasHoy = asistencias.length;
+          document.getElementById('contador-hoy').textContent = asistenciasHoy + ' hoy';
+
+          if (asistencias.length === 0) {
+            cont.innerHTML = '<p class="text-2 text-center">Sin asistencias cargadas aún</p>';
+            return;
+          }
+
+          // Últimas 20, más recientes primero
+          const ultimas = asistencias.slice(-20).reverse();
+
+          cont.innerHTML = ultimas.map(a => `
+            <div class="flex-between" style="padding: 8px 0; border-bottom: 1px solid var(--borde-2);">
+              <div>
+                <div class="font-semibold">${UTILS.escaparHTML(a.nombre_persona || '(sin nombre)')}</div>
+                <div class="text-xs text-2">
+                  Mesa ${UTILS.escaparHTML(a.numero_mesa)}
+                  ${a.dni ? '· DNI ' + UTILS.escaparHTML(a.dni) : ''}
+                  · ${UTILS.formatearHora(a.hora_registro)}
+                </div>
+              </div>
+              ${a.estado === 'DUPLICADO' ? '<span class="badge badge-alerta">Dup.</span>' : '<span class="badge badge-exito">✓</span>'}
+            </div>
+          `).join('');
+
+        } catch (err) {
+          cont.innerHTML = '<p class="text-error">Error al cargar</p>';
+        }
+      }
+
+      document.getElementById('btn-refresh-asist').addEventListener('click', cargarAsistencias);
+
+      // ---------- ESCRUTINIO: ABRIR MESA ----------
+      const formAbrirMesa = document.getElementById('form-abrir-mesa');
+
+      formAbrirMesa.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const btn = document.getElementById('btn-abrir-mesa');
+        const numero = document.getElementById('mesa-numero').value.trim();
+
+        if (!numero) {
+          UI.toast('Ingresá el número de mesa', 'error');
+          return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span> Abriendo...';
+
+        try {
+          const res = await API.abrirMesa(usuario.id_escuela, numero);
+          UI.toast('✅ Mesa abierta', 'exito');
+          await cargarMesasAbiertas();
+        } catch (err) {
+          UI.toast(err.message || 'Error al abrir mesa', 'error');
+        } finally {
+          btn.disabled = false;
+          btn.textContent = 'Abrir mesa';
+        }
+      });
+
+      // ---------- ESCRUTINIO: CERRAR MESA ----------
+      document.getElementById('btn-cerrar-mesa').addEventListener('click', async () => {
+        if (!mesaActual) return;
+        if (!confirm('¿Cerrar la mesa ' + mesaActual.numero_mesa + '? No vas a poder cargar más votos.')) return;
+
+        try {
+          await API.cerrarMesa(mesaActual.id_apertura);
+          UI.toast('✅ Mesa cerrada', 'exito');
+          mesaActual = null;
+          await cargarMesasAbiertas();
+        } catch (err) {
+          UI.toast(err.message || 'Error', 'error');
+        }
+      });
+
+      // ---------- ESCRUTINIO: VERIFICAR MESA ----------
+      async function cargarMesasAbiertas() {
+        try {
+          const mesas = await API.mesasAbiertas();
+          // Tomar la primera del usuario
+          mesaActual = mesas.find(m => m.id_usuario_apertura === usuario.id_usuario) || mesas[0] || null;
+
+          const boxActual = document.getElementById('mesa-actual-box');
+          const boxAbrir = document.getElementById('abrir-mesa-box');
+
+          if (mesaActual) {
+            boxActual.classList.remove('hidden');
+            boxAbrir.classList.add('hidden');
+            document.getElementById('mesa-actual-info').textContent =
+              'Mesa ' + mesaActual.numero_mesa + ' · ' + UTILS.formatearHora(mesaActual.hora_apertura);
+            cargarVotosMesa();
+          } else {
+            boxActual.classList.add('hidden');
+            boxAbrir.classList.remove('hidden');
+          }
+        } catch (err) {
+          console.error(err);
+        }
+      }
+
+      // ---------- ESCRUTINIO: CARGAR VOTO ----------
+      const formVoto = document.getElementById('form-voto');
+
+      formVoto.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!mesaActual) {
+          UI.toast('No hay mesa abierta', 'error');
+          return;
+        }
+
+        const btn = document.getElementById('btn-voto');
+        const categoria = document.getElementById('voto-categoria').value;
+        const cantidad = document.getElementById('voto-cantidad').value;
+        const obs = document.getElementById('voto-obs').value.trim();
+
+        if (!categoria || !cantidad) {
+          UI.toast('Completá categoría y cantidad', 'error');
+          return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span> Guardando...';
+
+        try {
+          await API.cargarVoto({
+            id_apertura: mesaActual.id_apertura,
+            categoria: categoria,
+            cantidad: cantidad,
+            observaciones: obs
+          });
+          UI.toast('✅ Votos cargados', 'exito');
+          formVoto.reset();
+          cargarVotosMesa();
+        } catch (err) {
+          UI.toast(err.message || 'Error', 'error');
+        } finally {
+          btn.disabled = false;
+          btn.textContent = 'Cargar votos';
+        }
+      });
+
+      // ---------- ESCRUTINIO: LISTAR VOTOS ----------
+      async function cargarVotosMesa() {
+        if (!mesaActual) return;
+        const cont = document.getElementById('lista-votos');
+        try {
+          const votos = await API.listarVotos();
+          const deMesa = votos.filter(v => v.id_apertura === mesaActual.id_apertura);
+
+          if (deMesa.length === 0) {
+            cont.innerHTML = '<p class="text-2 text-center">Sin votos cargados aún</p>';
+            return;
+          }
+
+          const categorias = {
+            COMPLETO: '🟢 Completo',
+            CRUZADO: '🔴 Cruzado',
+            BLANCO: '⚪ Blanco',
+            NULO: '⚫ Nulo'
+          };
+
+          cont.innerHTML = deMesa.map(v => `
+            <div class="flex-between" style="padding: 8px 0; border-bottom: 1px solid var(--borde-2);">
+              <div>
+                <div class="font-semibold">${categorias[v.categoria] || v.categoria}</div>
+                <div class="text-xs text-2">${UTILS.formatearHora(v.hora_registro)}</div>
+              </div>
+              <div class="text-xl font-bold text-rojo">${v.cantidad}</div>
+            </div>
+          `).join('');
+
+        } catch (err) {
+          cont.innerHTML = '<p class="text-error">Error al cargar</p>';
+        }
+      }
+
+      // ---------- INICIALIZAR ----------
+      await verificarEstadoDia();
+      await cargarAsistencias();
+      await cargarMesasAbiertas();
+
+      // Auto-refresh del estado del día cada 30s
+      setInterval(verificarEstadoDia, 30000);
+
+    })();
+  </script>
+
+</body>
+</html>
