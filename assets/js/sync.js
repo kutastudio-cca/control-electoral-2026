@@ -192,12 +192,35 @@ const SYNC = {
       const resultado = await this._enviarBatch(tipo, batch);
 
       // Procesar respuesta
+            // Procesar respuesta
       if (resultado.ok) {
+        // El backend devuelve exitosos: [{id_local, ok, id}]
+        // Filtramos los que tengan ok=true
+        const exitososRaw = resultado.exitosos || [];
+        const idsOk = new Set();
+        exitososRaw.forEach(e => {
+          if (e && e.ok && e.id_local) idsOk.add(e.id_local);
+        });
+
+        // Si no vino lista de exitosos, asumimos que todo el batch pasó
+        if (exitososRaw.length === 0) {
+          batch.forEach(b => idsOk.add(b.id_local));
+        }
+
         // Eliminar los items exitosos de la cola
-        const idsExitosos = new Set(resultado.exitosos || batch.map(b => b.id_local));
-        cola = cola.filter(item => !idsExitosos.has(item.id_local));
+        cola = cola.filter(item => !idsOk.has(item.id_local));
         this._escribirCola(tipo, cola);
+
+        // Si hubo fallos individuales, marcarlos
+        const fallidos = exitososRaw.filter(e => e && e.ok === false);
+        if (fallidos.length > 0) {
+          const fallidosIds = new Set(fallidos.map(f => f.id_local));
+          cola = cola.filter(item => !fallidosIds.has(item.id_local));
+          this._escribirCola(tipo, cola);
+          UI.toast(`⚠️ ${fallidos.length} registros rechazados por el servidor`, 'error', 6000);
+        }
       } else {
+         
         // Marcar intentos
         batch.forEach(item => {
           const encontrado = cola.find(c => c.id_local === item.id_local);
@@ -225,9 +248,14 @@ const SYNC = {
     }
   },
 
-  async _enviarBatch(tipo, batch) {
+    async _enviarBatch(tipo, batch) {
     const config = this.CONFIG[tipo];
-    const items = batch.map(item => item.datos);
+
+    // Cada item debe llevar su id_local para que el backend lo devuelva
+    const items = batch.map(item => ({
+      ...item.datos,
+      id_local: item.id_local
+    }));
 
     try {
       const data = await API.request(config.endpoint, { items: items });
