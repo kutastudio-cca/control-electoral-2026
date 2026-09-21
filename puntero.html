@@ -13,18 +13,15 @@
   <link rel="stylesheet" href="assets/css/dashboard.css">
 
   <style>
-    /* ---------- ESCRUTINIO BOTONES ---------- */
     .voto-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: var(--esp-3);
       margin-bottom: var(--esp-4);
     }
-
     @media (max-width: 640px) {
       .voto-grid { grid-template-columns: 1fr; }
     }
-
     .voto-btn {
       background: var(--superficie);
       border: 2px solid var(--borde);
@@ -39,23 +36,19 @@
       user-select: none;
       -webkit-tap-highlight-color: transparent;
     }
-
     .voto-btn:active {
       transform: scale(0.96);
       border-color: var(--rojo-600);
       background: var(--rojo-50);
     }
-
     .voto-btn.cruzado:hover  { border-color: var(--rojo-600); }
     .voto-btn.completo:hover { border-color: var(--exito); }
     .voto-btn.blanco:hover   { border-color: var(--texto-3); }
-
     .voto-fotos {
       display: flex;
       justify-content: center;
       gap: var(--esp-2);
     }
-
     .voto-foto {
       width: 52px;
       height: 52px;
@@ -64,7 +57,6 @@
       border: 2px solid var(--borde);
       background: var(--fondo);
     }
-
     .voto-foto.blanco-placeholder {
       display: flex;
       align-items: center;
@@ -78,7 +70,6 @@
       text-align: center;
       padding: 2px;
     }
-
     .voto-titulo {
       font-size: 13px;
       font-weight: 700;
@@ -86,18 +77,15 @@
       text-transform: uppercase;
       letter-spacing: 0.3px;
     }
-
     .voto-titulo.cruzado  { color: var(--rojo-600); }
     .voto-titulo.completo { color: var(--exito); }
     .voto-titulo.blanco   { color: var(--texto-2); }
-
     .voto-sub {
       font-size: 10px;
       color: var(--texto-3);
       line-height: 1.2;
       min-height: 24px;
     }
-
     .voto-contador {
       font-size: 26px;
       font-weight: 800;
@@ -105,11 +93,9 @@
       color: var(--texto);
       margin-top: var(--esp-1);
     }
-
     .voto-btn.cruzado .voto-contador  { color: var(--rojo-600); }
     .voto-btn.completo .voto-contador { color: var(--exito); }
     .voto-btn.blanco .voto-contador   { color: var(--texto-2); }
-
     .voto-total-box {
       background: var(--superficie);
       border: 1px solid var(--borde-2);
@@ -120,7 +106,6 @@
       justify-content: space-between;
       margin-bottom: var(--esp-4);
     }
-
     .voto-total-label {
       font-size: 12px;
       font-weight: 700;
@@ -128,14 +113,12 @@
       color: var(--texto-2);
       letter-spacing: 0.5px;
     }
-
     .voto-total-valor {
       font-size: 32px;
       font-weight: 800;
       color: var(--rojo-600);
       line-height: 1;
     }
-
     .voto-feedback {
       position: fixed;
       bottom: 20px;
@@ -153,14 +136,17 @@
       transition: opacity 0.2s, transform 0.2s;
       z-index: 9999;
     }
-
     .voto-feedback.visible {
       opacity: 1;
       transform: translateX(-50%) translateY(-8px);
     }
-
     .voto-feedback.completo { background: var(--exito); }
     .voto-feedback.blanco   { background: var(--texto-2); }
+    .sync-indicator-wrap {
+      display: flex;
+      gap: var(--esp-2);
+      align-items: center;
+    }
   </style>
 </head>
 <body>
@@ -168,7 +154,10 @@
   <header class="header">
     <div class="container header-inner">
       <div class="header-logo" id="header-logo"></div>
-      <div class="header-user" id="header-user"></div>
+      <div class="header-user">
+        <div class="sync-indicator-wrap" id="sync-indicator"></div>
+        <div id="header-user"></div>
+      </div>
     </div>
   </header>
 
@@ -250,7 +239,6 @@
            ============================================ -->
       <section id="tab-escrutinio" class="tab-content hidden">
 
-        <!-- Mesa actual -->
         <div id="mesa-actual-box" class="hidden">
 
           <div class="alert alert-exito mb-4">
@@ -263,16 +251,13 @@
             </div>
           </div>
 
-          <!-- Total contados -->
           <div class="voto-total-box">
             <div class="voto-total-label">Total contados</div>
             <div class="voto-total-valor" id="voto-total">0</div>
           </div>
 
-          <!-- Botones de voto -->
           <div class="voto-grid">
 
-            <!-- CRUZADO -->
             <button type="button" class="voto-btn cruzado" data-categoria="CRUZADO">
               <div class="voto-fotos">
                 <img src="assets/img/pablo-alderete.jpg" alt="Pablo Alderete" class="voto-foto" onerror="this.style.display='none'">
@@ -283,7 +268,6 @@
               <div class="voto-contador" id="contador-cruzado">0</div>
             </button>
 
-            <!-- COMPLETO -->
             <button type="button" class="voto-btn completo" data-categoria="COMPLETO">
               <div class="voto-fotos">
                 <img src="assets/img/pablo-alderete.jpg" alt="Pablo Alderete" class="voto-foto" onerror="this.style.display='none'">
@@ -294,7 +278,6 @@
               <div class="voto-contador" id="contador-completo">0</div>
             </button>
 
-            <!-- BLANCO -->
             <button type="button" class="voto-btn blanco" data-categoria="BLANCO">
               <div class="voto-fotos">
                 <img src="assets/img/pablo-alderete.jpg" alt="Pablo Alderete" class="voto-foto" onerror="this.style.display='none'">
@@ -309,7 +292,6 @@
 
         </div>
 
-        <!-- Abrir mesa (si no hay ninguna abierta) -->
         <div id="abrir-mesa-box">
           <div class="card">
             <div class="card-header">
@@ -347,10 +329,9 @@
     </div>
   </main>
 
-  <!-- Feedback visual del tap -->
   <div class="voto-feedback" id="voto-feedback">+1</div>
 
-    <script src="assets/js/config.js"></script>
+  <script src="assets/js/config.js"></script>
   <script src="assets/js/utils.js"></script>
   <script src="assets/js/cache.js"></script>
   <script src="assets/js/api.js"></script>
@@ -370,9 +351,16 @@
       let escrutinioHabilitado = false;
       let mesaActual = null;
       let contadores = { COMPLETO: 0, CRUZADO: 0, BLANCO: 0, NULO: 0 };
-      let enviandoVoto = false;
+      let idsPendientesEscrutinio = []; // IDs locales de votos pendientes (para revertir si falla)
 
-      // ---------- TABS ----------
+      // ============================================================
+      // INICIAR SYNC (motor de batch)
+      // ============================================================
+      SYNC.iniciar();
+
+      // ============================================================
+      // TABS
+      // ============================================================
       document.querySelectorAll('.tab').forEach(tab => {
         tab.addEventListener('click', () => {
           document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -382,7 +370,9 @@
         });
       });
 
-      // ---------- ESTADO DEL DÍA + ESCRUTINIO ----------
+      // ============================================================
+      // ESTADO DEL DÍA + ESCRUTINIO (usa cache)
+      // ============================================================
       async function verificarEstado() {
         try {
           const data = await API.estadoDia();
@@ -391,7 +381,7 @@
         } catch (e) { console.error(e); }
 
         try {
-          const sis = await API.request('estadoSistema');
+          const sis = await DATA.estadoSistema();
           escrutinioHabilitado = sis.escrutinio_habilitado === 'ABIERTO';
           actualizarEscrutinioUI();
         } catch (e) { console.error(e); }
@@ -421,12 +411,13 @@
         }
       }
 
-      // ---------- ASISTENCIA ----------
-      document.getElementById('form-asistencia').addEventListener('submit', async (e) => {
+      // ============================================================
+      // ASISTENCIA (con SYNC)
+      // ============================================================
+      document.getElementById('form-asistencia').addEventListener('submit', (e) => {
         e.preventDefault();
         if (estadoDia !== 'ABIERTO') { UI.toast('El día no está abierto', 'alerta'); return; }
 
-        const btn = document.getElementById('btn-asistencia');
         const mesa = document.getElementById('asist-mesa').value.trim();
         const nombre = document.getElementById('asist-nombre').value.trim();
         const dni = document.getElementById('asist-dni').value.trim();
@@ -434,41 +425,68 @@
 
         if (!mesa) { UI.toast('Ingresá el número de mesa', 'error'); return; }
 
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner"></span> Guardando...';
-
+        // Encolar en SYNC (no espera al backend)
         try {
-          const res = await API.registrarAsistencia({ numero_mesa: mesa, nombre_persona: nombre, dni, observaciones: obs });
-          if (res.duplicado) UI.toast('⚠️ Persona duplicada', 'alerta', 5000);
-          else UI.toast('✅ Asistencia registrada', 'exito');
+          const idLocal = SYNC.encolar('asistencia', {
+            numero_mesa: mesa,
+            nombre_persona: nombre,
+            dni: dni,
+            observaciones: obs
+          });
+
+          UI.toast('✅ Guardado localmente', 'exito', 1500);
+
+          // Limpiar form
           e.target.reset();
           document.getElementById('asist-mesa').focus();
+
+          // Actualizar lista local (optimistic UI)
           cargarAsistencias();
+
         } catch (err) {
-          UI.toast(err.message || 'Error', 'error');
-        } finally {
-          btn.disabled = false;
-          btn.textContent = 'Registrar asistencia';
+          UI.toast('Error al guardar: ' + err.message, 'error');
         }
       });
 
       async function cargarAsistencias() {
         const cont = document.getElementById('lista-asistencias');
         try {
-          const asistencias = await API.misAsistencias();
-          document.getElementById('contador-hoy').textContent = asistencias.length + ' hoy';
-          if (asistencias.length === 0) {
+          // Asistencias confirmadas del backend
+          const confirmadas = await API.misAsistencias();
+
+          // Asistencias pendientes en la cola
+          const cola = SYNC._leerCola('asistencia');
+          const pendientes = cola.map(c => ({
+            id_asistencia: c.id_local,
+            numero_mesa: c.datos.numero_mesa,
+            nombre_persona: c.datos.nombre_persona,
+            dni: c.datos.dni,
+            hora_registro: c.timestamp,
+            estado: 'PENDIENTE'
+          }));
+
+          const todas = [...confirmadas, ...pendientes];
+          document.getElementById('contador-hoy').textContent = todas.length + ' hoy';
+
+          if (todas.length === 0) {
             cont.innerHTML = '<p class="text-2 text-center">Sin asistencias aún</p>';
             return;
           }
-          const ultimas = asistencias.slice(-20).reverse();
+
+          const ultimas = todas.slice(-20).reverse();
           cont.innerHTML = ultimas.map(a => `
             <div class="flex-between" style="padding: 8px 0; border-bottom: 1px solid var(--borde-2);">
               <div>
                 <div class="font-semibold">${UTILS.escaparHTML(a.nombre_persona || '(sin nombre)')}</div>
-                <div class="text-xs text-2">Mesa ${UTILS.escaparHTML(a.numero_mesa)} · ${UTILS.formatearHora(a.hora_registro)}</div>
+                <div class="text-xs text-2">
+                  Mesa ${UTILS.escaparHTML(a.numero_mesa)}
+                  ${a.dni ? ' · DNI ' + UTILS.escaparHTML(a.dni) : ''}
+                  · ${UTILS.formatearHora(a.hora_registro)}
+                </div>
               </div>
-              ${a.estado === 'DUPLICADO' ? '<span class="badge badge-alerta">Dup</span>' : '<span class="badge badge-exito">✓</span>'}
+              ${a.estado === 'PENDIENTE'
+                ? '<span class="badge badge-alerta">Sync</span>'
+                : (a.estado === 'DUPLICADO' ? '<span class="badge badge-alerta">Dup</span>' : '<span class="badge badge-exito">✓</span>')}
             </div>
           `).join('');
         } catch (err) {
@@ -478,7 +496,9 @@
 
       document.getElementById('btn-refresh-asist').addEventListener('click', cargarAsistencias);
 
-      // ---------- ESCRUTINIO: ABRIR MESA ----------
+      // ============================================================
+      // ESCRUTINIO: ABRIR MESA
+      // ============================================================
       document.getElementById('form-abrir-mesa').addEventListener('submit', async (e) => {
         e.preventDefault();
         const btn = document.getElementById('btn-abrir-mesa');
@@ -500,10 +520,30 @@
         }
       });
 
-      // ---------- ESCRUTINIO: CERRAR MESA ----------
+      // ============================================================
+      // ESCRUTINIO: CERRAR MESA
+      // ============================================================
       document.getElementById('btn-cerrar-mesa').addEventListener('click', async () => {
         if (!mesaActual) return;
+
+        // Si hay votos pendientes, esperar a que se sincronicen
+        const pendientes = SYNC._leerCola('escrutinio');
+        if (pendientes.length > 0) {
+          if (!confirm(`Tenés ${pendientes.length} votos pendientes de sincronizar.\n\nSe van a enviar ahora antes de cerrar. ¿Continuar?`)) return;
+          UI.loader(true, 'Sincronizando votos pendientes...');
+          await SYNC._syncAhora('escrutinio');
+          await new Promise(r => setTimeout(r, 800));
+          UI.loader(false);
+
+          const aunPendientes = SYNC._leerCola('escrutinio');
+          if (aunPendientes.length > 0) {
+            UI.toast('No se pudieron sincronizar todos. Reintentá en unos segundos.', 'error', 6000);
+            return;
+          }
+        }
+
         if (!confirm('¿Cerrar la mesa ' + mesaActual.numero_mesa + '? No vas a poder cargar más votos.')) return;
+
         try {
           await API.cerrarMesa(mesaActual.id_apertura);
           UI.toast('✅ Mesa cerrada', 'exito');
@@ -515,7 +555,9 @@
         }
       });
 
-      // ---------- ESCRUTINIO: CARGAR MESAS ----------
+      // ============================================================
+      // ESCRUTINIO: CARGAR MESAS
+      // ============================================================
       async function cargarMesasAbiertas() {
         try {
           const mesas = await API.mesasAbiertas();
@@ -540,12 +582,25 @@
         }
       }
 
-      // ---------- ESCRUTINIO: CARGAR CONTADORES ----------
+      // ============================================================
+      // ESCRUTINIO: CARGAR CONTADORES (backend + pendientes locales)
+      // ============================================================
       async function cargarContadores() {
         if (!mesaActual) return;
         try {
+          // Contadores confirmados del backend
           const data = await API.request('contadoresMesa', { id_apertura: mesaActual.id_apertura });
           contadores = data.contadores;
+
+          // Sumar pendientes locales de la cola
+          const cola = SYNC._leerCola('escrutinio').filter(c => c.datos.id_apertura === mesaActual.id_apertura);
+          cola.forEach(c => {
+            const cat = c.datos.categoria;
+            if (contadores[cat] !== undefined) {
+              contadores[cat] += Number(c.datos.cantidad || 1);
+            }
+          });
+
           renderContadores();
         } catch (err) {
           console.error(err);
@@ -560,39 +615,35 @@
         document.getElementById('voto-total').textContent = total;
       }
 
-      // ---------- ESCRUTINIO: TAP EN BOTÓN ----------
+      // ============================================================
+      // ESCRUTINIO: TAP EN BOTÓN (con SYNC)
+      // ============================================================
       document.querySelectorAll('.voto-btn').forEach(btn => {
         btn.addEventListener('click', () => registrarTap(btn.dataset.categoria));
       });
 
-      async function registrarTap(categoria) {
+      function registrarTap(categoria) {
         if (!mesaActual) { UI.toast('No hay mesa abierta', 'error'); return; }
-        if (enviandoVoto) return;
         if (!escrutinioHabilitado) { UI.toast('Escrutinio no habilitado', 'alerta'); return; }
 
-        enviandoVoto = true;
-
-        // Optimistic UI: sumar localmente ya
-        contadores[categoria] = (contadores[categoria] || 0) + 1;
-        renderContadores();
-        mostrarFeedback(categoria);
-
-        // Vibración si el celular lo soporta
-        if (navigator.vibrate) navigator.vibrate(30);
-
+        // Encolar en SYNC (local, instantáneo)
         try {
-          await API.cargarVoto({
+          const idLocal = SYNC.encolar('escrutinio', {
             id_apertura: mesaActual.id_apertura,
             categoria: categoria,
             cantidad: 1
           });
-        } catch (err) {
-          // Si falla → revertir
-          contadores[categoria] = (contadores[categoria] || 0) - 1;
+
+          // Actualizar contador local (optimistic)
+          contadores[categoria] = (contadores[categoria] || 0) + 1;
           renderContadores();
-          UI.toast('Error al guardar: ' + (err.message || ''), 'error');
-        } finally {
-          enviandoVoto = false;
+
+          // Feedback visual + vibración
+          mostrarFeedback(categoria);
+          if (navigator.vibrate) navigator.vibrate(30);
+
+        } catch (err) {
+          UI.toast('Error: ' + err.message, 'error');
         }
       }
 
@@ -606,12 +657,22 @@
         window._fbTimer = setTimeout(() => { fb.classList.remove('visible'); }, 400);
       }
 
-      // ---------- INICIALIZAR ----------
+      // ============================================================
+      // INICIALIZAR
+      // ============================================================
       await verificarEstado();
       await cargarAsistencias();
       await cargarMesasAbiertas();
 
       setInterval(verificarEstado, 30000);
+
+      // Actualizar la lista de asistencias cada 20s (para ver los confirmados)
+      setInterval(cargarAsistencias, 20000);
+
+      // Actualizar contadores del escrutinio cada 15s (por si hay otros usuarios)
+      setInterval(() => {
+        if (mesaActual) cargarContadores();
+      }, 15000);
 
     })();
   </script>
