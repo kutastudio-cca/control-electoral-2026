@@ -33,6 +33,20 @@
           <form id="form-viaje">
 
             <div class="form-group">
+              <label class="form-label" for="viaje-barrio">
+                Barrio de salida <span class="req">*</span>
+              </label>
+              <input
+                type="text"
+                id="viaje-barrio"
+                class="form-input"
+                placeholder="Ej: San Miguel, Centro"
+                autocapitalize="words"
+                required
+              >
+            </div>
+
+            <div class="form-group">
               <label class="form-label" for="viaje-colegio">
                 Colegio destino <span class="req">*</span>
               </label>
@@ -121,12 +135,13 @@
         e.preventDefault();
 
         const btn = document.getElementById('btn-viaje');
+        const barrio = document.getElementById('viaje-barrio').value.trim();
         const colegio = document.getElementById('viaje-colegio').value;
         const cantidad = document.getElementById('viaje-cantidad').value;
         const obs = document.getElementById('viaje-obs').value.trim();
 
-        if (!colegio || !cantidad) {
-          UI.toast('Completá colegio y cantidad', 'error');
+        if (!barrio || !colegio || !cantidad) {
+          UI.toast('Completá barrio, colegio y cantidad', 'error');
           return;
         }
 
@@ -137,10 +152,16 @@
           await API.registrarViaje({
             id_escuela_destino: colegio,
             cantidad_personas: cantidad,
+            barrio: barrio,
             observaciones: obs
           });
           UI.toast('✅ Viaje registrado', 'exito');
-          document.getElementById('form-viaje').reset();
+
+          // Limpiar solo cantidad y obs (mantener barrio y colegio por si va de nuevo)
+          document.getElementById('viaje-cantidad').value = '';
+          document.getElementById('viaje-obs').value = '';
+          document.getElementById('viaje-cantidad').focus();
+
           cargarViajes();
         } catch (err) {
           UI.toast(err.message || 'Error', 'error');
@@ -172,7 +193,10 @@
               <div class="flex-between" style="padding: 10px 0; border-bottom: 1px solid var(--borde-2);">
                 <div>
                   <div class="font-semibold">${UTILS.escaparHTML(esc ? esc.nombre : v.id_escuela_destino)}</div>
-                  <div class="text-xs text-2">${UTILS.formatearHora(v.hora_registro)}</div>
+                  <div class="text-xs text-2">
+                    🚗 desde <strong>${UTILS.escaparHTML(v.barrio || '—')}</strong>
+                    · ${UTILS.formatearHora(v.hora_registro)}
+                  </div>
                 </div>
                 <div class="text-xl font-bold text-rojo">${v.cantidad_personas}</div>
               </div>
