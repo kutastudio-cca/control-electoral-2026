@@ -1098,6 +1098,20 @@
           ['id_auditoria', 'fecha_hora', 'id_usuario', 'accion', 'tabla_afectada', 'id_registro', 'datos_anteriores', 'datos_nuevos']);
       });
 
+            document.getElementById('btn-exportar-viajes').addEventListener('click', async () => {
+        try {
+          UI.loader(true, 'Exportando...');
+          const datos = await API.request('misViajes');
+          exportarCSV('viajes_' + new Date().toISOString().slice(0, 10), datos,
+            ['id_viaje', 'fecha', 'id_usuario', 'id_escuela_destino', 'cantidad_personas', 'hora_registro', 'observaciones', 'barrio']);
+          UI.toast('Exportado: viajes', 'exito');
+        } catch (err) {
+          UI.toast('Error: ' + err.message, 'error');
+        } finally {
+          UI.loader(false);
+        }
+      });
+      
       document.getElementById('btn-exportar-todo').addEventListener('click', async () => {
         try {
           UI.loader(true, 'Exportando todo...');
