@@ -173,7 +173,6 @@
 
       let cacheEscuelas = [];
       let cacheMesas = [];
-      let cachePunteros = [];
       let filtroMesas = 'todas';
 
       // ============================================================
@@ -238,11 +237,9 @@
       // ============================================================
       async function cargarResumen() {
         try {
-          const [mesas, asistencias, votos] = await Promise.all([
-            API.request('mesasTodas'),
-            API.listarAsistencias(),
-            API.listarVotos()
-          ]);
+          const mesas = await API.request('mesasTodas');
+          const asistencias = await API.listarAsistencias();
+          const votos = await API.listarVotos();
 
           const mesasAbiertas = mesas.filter(m => m.estado === 'ABIERTA').length;
           const mias = asistencias.filter(a => a.id_escuela === usuario.id_escuela && a.estado === 'VALIDO');
@@ -265,6 +262,9 @@
         } catch (e) { console.error(e); }
       }
 
+      // ============================================================
+      // VOTOS POR CATEGORÍA
+      // ============================================================
       function renderCategorias(cat) {
         const cont = document.getElementById('votos-categoria');
         const total = Object.values(cat).reduce((a, b) => a + b, 0);
@@ -286,8 +286,8 @@
         }).join('');
       }
 
-            // ============================================================
-      // RANKING PUNTEROS (tab resumen)
+      // ============================================================
+      // RANKING PUNTEROS
       // ============================================================
       function renderRanking(asistencias) {
         const cont = document.getElementById('ranking-punteros');
@@ -322,37 +322,6 @@
           cont.innerHTML = '<div class="empty-state"><p>Error al cargar</p></div>';
         }
       }
-          const mias = asistencias.filter(a => a.id_escuela === usuario.id_escuela && a.estado === 'VALIDO');
-
-          const conteo = {};
-          mias.forEach(a => { conteo[a.id_usuario] = (conteo[a.id_usuario] || 0) + 1; });
-
-          if (Object.keys(conteo).length === 0) {
-            cont.innerHTML = '<div class="empty-state"><p>Sin registros aún</p></div>';
-            return;
-          }
-
-          // Necesitamos los nombres. Como el coordinador no puede listar usuarios, usamos los que tenemos.
-          const arr = Object.keys(conteo).map(id => ({
-            id, asistencias: conteo[id]
-          })).sort((a, b) => b.asistencias - a.asistencias);
-
-          cont.innerHTML = arr.slice(0, 10).map((p, i) => {
-            const clase = i === 0 ? 'top1' : i === 1 ? 'top2' : i === 2 ? 'top3' : '';
-            return `
-              <div class="ranking-item">
-                <div class="ranking-pos ${clase}">${i + 1}</div>
-                <div class="ranking-info">
-                  <div class="ranking-nombre">${UTILS.escaparHTML(p.id)}</div>
-                </div>
-                <div class="ranking-valor">${p.asistencias}</div>
-              </div>
-            `;
-          }).join('');
-        } catch (e) {
-          cont.innerHTML = '<div class="empty-state"><p>Error al cargar</p></div>';
-        }
-      }
 
       // ============================================================
       // LISTA DE PUNTEROS (tab punteros)
@@ -365,7 +334,7 @@
 
           const conteo = {};
           mias.forEach(a => {
-            if (!conteo[a.id_usuario]) conteo[a.id_usuario] = { total: 0, validas: 0, duplicadas: 0 };
+            if (!conteo[a.id_usuario]) conteo[a.id_usuario] = { total: 0, validas: 0 };
             conteo[a.id_usuario].total++;
             if (a.estado === 'VALIDO') conteo[a.id_usuario].validas++;
           });
@@ -562,13 +531,11 @@
       // ============================================================
       // INICIALIZAR
       // ============================================================
-            // Cargar secuencial con delays para evitar concurrencia
       await cargarInfoColegio();
       await new Promise(r => setTimeout(r, 100));
       await cargarEstadoDia();
       await new Promise(r => setTimeout(r, 100));
       await cargarResumen();
-   
 
       setInterval(() => {
         cargarEstadoDia();
