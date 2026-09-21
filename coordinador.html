@@ -29,7 +29,7 @@
         <p class="page-subtitle" id="info-colegio">Cargando...</p>
       </div>
 
-      <!-- Estado del día -->
+      <!-- ESTADO DEL DÍA -->
       <div id="estado-dia-box" class="dia-status mb-4">
         <div>
           <strong id="estado-dia-titulo">Cargando...</strong>
@@ -38,69 +38,121 @@
         <span class="badge" id="estado-dia-badge">—</span>
       </div>
 
-      <!-- KPIs -->
-      <div class="kpi-grid">
-        <div class="kpi-card">
-          <div class="kpi-label">Asistencias</div>
-          <div class="kpi-value rojo" id="kpi-asistencias">0</div>
-          <div class="kpi-sub">Registradas</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-label">Votos totales</div>
-          <div class="kpi-value" id="kpi-votos">0</div>
-          <div class="kpi-sub">En escrutinio</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-label">Punteros activos</div>
-          <div class="kpi-value info" id="kpi-punteros">0</div>
-          <div class="kpi-sub">Con registros</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-label">Mesas abiertas</div>
-          <div class="kpi-value exito" id="kpi-mesas">0</div>
-          <div class="kpi-sub">En escrutinio</div>
-        </div>
-      </div>
-
-      <!-- Ranking -->
-      <div class="grid grid-2">
-
-        <div class="card">
-          <div class="card-header">
-            <h2 class="card-title">🏆 Ranking punteros</h2>
-          </div>
-          <div class="card-body" id="ranking-punteros">
-            <div class="empty-state">
-              <p>Cargando...</p>
+      <!-- RESUMEN DEL COLEGIO -->
+      <div class="card mb-5" style="background: linear-gradient(135deg, var(--rojo-800) 0%, var(--rojo-600) 100%); color: #fff; border: none;">
+        <div class="card-body" style="padding: var(--esp-5);">
+          <div class="text-sm" style="opacity: 0.9; margin-bottom: var(--esp-3); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Resumen del colegio</div>
+          <div class="grid grid-4" style="gap: var(--esp-4);">
+            <div>
+              <div style="font-size: 32px; font-weight: 800; line-height: 1;" id="resumen-mesas">0/0</div>
+              <div class="text-xs" style="opacity: 0.85; margin-top: 4px;">Mesas abiertas</div>
+            </div>
+            <div>
+              <div style="font-size: 32px; font-weight: 800; line-height: 1;" id="resumen-asistencias">0</div>
+              <div class="text-xs" style="opacity: 0.85; margin-top: 4px;">Asistencias</div>
+            </div>
+            <div>
+              <div style="font-size: 32px; font-weight: 800; line-height: 1;" id="resumen-votos">0</div>
+              <div class="text-xs" style="opacity: 0.85; margin-top: 4px;">Votos totales</div>
+            </div>
+            <div>
+              <div style="font-size: 32px; font-weight: 800; line-height: 1;" id="resumen-punteros">0</div>
+              <div class="text-xs" style="opacity: 0.85; margin-top: 4px;">Punteros activos</div>
             </div>
           </div>
         </div>
+      </div>
 
-        <div class="card">
-          <div class="card-header">
-            <h2 class="card-title">🗳️ Votos por categoría</h2>
+      <!-- TABS -->
+      <div class="tabs">
+        <button class="tab active" data-tab="resumen">📊 Resumen</button>
+        <button class="tab" data-tab="punteros">👥 Punteros</button>
+        <button class="tab" data-tab="mesas">🪑 Mesas</button>
+        <button class="tab" data-tab="pc">🎯 PC</button>
+        <button class="tab" data-tab="asistencias">📋 Asistencias</button>
+      </div>
+
+      <!-- TAB: RESUMEN -->
+      <section id="tab-resumen" class="tab-content">
+        <div class="grid grid-2">
+          <div class="card">
+            <div class="card-header">
+              <h2 class="card-title">🏆 Ranking punteros</h2>
+            </div>
+            <div class="card-body" id="ranking-punteros">
+              <div class="empty-state"><p>Cargando...</p></div>
+            </div>
           </div>
-          <div class="card-body" id="votos-categoria">
-            <div class="empty-state">
-              <p>Cargando...</p>
+
+          <div class="card">
+            <div class="card-header">
+              <h2 class="card-title">🗳️ Votos por categoría</h2>
+            </div>
+            <div class="card-body" id="votos-categoria">
+              <div class="empty-state"><p>Cargando...</p></div>
             </div>
           </div>
         </div>
+      </section>
 
-      </div>
-
-      <!-- Últimos registros -->
-      <div class="card mt-5">
-        <div class="card-header">
-          <h2 class="card-title">📋 Últimas asistencias</h2>
-          <button class="btn btn-ghost btn-sm" id="btn-refresh">🔄</button>
-        </div>
-        <div class="card-body" id="ultimas-asistencias">
-          <div class="empty-state">
-            <p>Cargando...</p>
+      <!-- TAB: PUNTEROS -->
+      <section id="tab-punteros" class="tab-content hidden">
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">👥 Punteros del colegio</h2>
+            <button class="btn btn-ghost btn-sm" id="btn-refresh-punteros">🔄</button>
+          </div>
+          <div class="card-body" id="lista-punteros">
+            <div class="empty-state"><p>Cargando...</p></div>
           </div>
         </div>
-      </div>
+      </section>
+
+      <!-- TAB: MESAS -->
+      <section id="tab-mesas" class="tab-content hidden">
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">🪑 Mesas del colegio</h2>
+            <button class="btn btn-ghost btn-sm" id="btn-refresh-mesas">🔄</button>
+          </div>
+          <div class="card-body">
+            <div class="mesas-filtros" style="display: flex; gap: var(--esp-2); margin-bottom: var(--esp-3); flex-wrap: wrap;">
+              <button class="btn btn-primary btn-sm" data-filtro="todas">Todas</button>
+              <button class="btn btn-secondary btn-sm" data-filtro="abiertas">Abiertas</button>
+              <button class="btn btn-secondary btn-sm" data-filtro="cerradas">Cerradas</button>
+            </div>
+            <div id="lista-mesas">
+              <div class="empty-state"><p>Cargando...</p></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB: PC -->
+      <section id="tab-pc" class="tab-content hidden">
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">🎯 Registros del Puesto de Control</h2>
+            <button class="btn btn-ghost btn-sm" id="btn-refresh-pc">🔄</button>
+          </div>
+          <div class="card-body" id="lista-pc">
+            <div class="empty-state"><p>Cargando...</p></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB: ASISTENCIAS -->
+      <section id="tab-asistencias" class="tab-content hidden">
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">📋 Asistencias del colegio</h2>
+            <button class="btn btn-ghost btn-sm" id="btn-refresh-asist">🔄</button>
+          </div>
+          <div class="card-body" id="lista-asistencias">
+            <div class="empty-state"><p>Cargando...</p></div>
+          </div>
+        </div>
+      </section>
 
     </div>
   </main>
@@ -119,17 +171,44 @@
       AUTH.renderHeaderLogo();
       AUTH.renderHeaderUsuario(usuario);
 
-      // ---------- INFO COLEGIO ----------
+      let cacheEscuelas = [];
+      let cacheMesas = [];
+      let cachePunteros = [];
+      let filtroMesas = 'todas';
+
+      // ============================================================
+      // TABS
+      // ============================================================
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+          document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+          tab.classList.add('active');
+          document.getElementById('tab-' + tab.dataset.tab).classList.remove('hidden');
+
+          const t = tab.dataset.tab;
+          if (t === 'punteros')     cargarPunteros();
+          if (t === 'mesas')        cargarMesas();
+          if (t === 'pc')           cargarPC();
+          if (t === 'asistencias')  cargarAsistencias();
+        });
+      });
+
+      // ============================================================
+      // INFO COLEGIO
+      // ============================================================
       async function cargarInfoColegio() {
         try {
-          const escuelas = await API.listarEscuelas();
-          const mi = escuelas.find(e => e.id_escuela === usuario.id_escuela);
+          cacheEscuelas = await API.listarEscuelas();
+          const mi = cacheEscuelas.find(e => e.id_escuela === usuario.id_escuela);
           document.getElementById('info-colegio').textContent =
             mi ? mi.nombre + ' · ' + (mi.zona || 'Sin zona') : usuario.id_escuela;
         } catch (e) { console.error(e); }
       }
 
-      // ---------- ESTADO DEL DÍA ----------
+      // ============================================================
+      // ESTADO DEL DÍA
+      // ============================================================
       async function cargarEstadoDia() {
         try {
           const data = await API.estadoDia();
@@ -154,30 +233,33 @@
         } catch (e) { console.error(e); }
       }
 
-      // ---------- KPIs ----------
-      async function cargarKPIs() {
+      // ============================================================
+      // RESUMEN DEL COLEGIO
+      // ============================================================
+      async function cargarResumen() {
         try {
-          const [asistencias, votos, mesas] = await Promise.all([
+          const [mesas, asistencias, votos] = await Promise.all([
+            API.request('mesasTodas'),
             API.listarAsistencias(),
-            API.listarVotos(),
-            API.mesasAbiertas()
+            API.listarVotos()
           ]);
 
+          const mesasAbiertas = mesas.filter(m => m.estado === 'ABIERTA').length;
           const mias = asistencias.filter(a => a.id_escuela === usuario.id_escuela && a.estado === 'VALIDO');
-          const misVotos = votos.filter(v => v.id_escuela === usuario.id_escuela && v.estado === 'VALIDO');
-          const misMesas = mesas.filter(m => m.id_escuela === usuario.id_escuela);
+          const votosMios = votos.filter(v => v.id_escuela === usuario.id_escuela && v.estado === 'VALIDO');
+          const totalVotos = votosMios.reduce((s, v) => s + Number(v.cantidad || 0), 0);
+          const punterosActivos = new Set(mias.map(a => a.id_usuario)).size;
 
-          const totalVotos = misVotos.reduce((s, v) => s + Number(v.cantidad || 0), 0);
-          const punterosUnicos = new Set(mias.map(a => a.id_usuario)).size;
+          const totalMesas = usuario.id_escuela === 'COL_MRCAL' ? 24 : 20;
 
-          document.getElementById('kpi-asistencias').textContent = UTILS.formatearNumero(mias.length);
-          document.getElementById('kpi-votos').textContent = UTILS.formatearNumero(totalVotos);
-          document.getElementById('kpi-punteros').textContent = punterosUnicos;
-          document.getElementById('kpi-mesas').textContent = misMesas.length;
+          document.getElementById('resumen-mesas').textContent = mesasAbiertas + '/' + totalMesas;
+          document.getElementById('resumen-asistencias').textContent = UTILS.formatearNumero(mias.length);
+          document.getElementById('resumen-votos').textContent = UTILS.formatearNumero(totalVotos);
+          document.getElementById('resumen-punteros').textContent = punterosActivos;
 
           // Votos por categoría
           const cat = { COMPLETO: 0, CRUZADO: 0, BLANCO: 0, NULO: 0 };
-          misVotos.forEach(v => { cat[v.categoria] = (cat[v.categoria] || 0) + Number(v.cantidad || 0); });
+          votosMios.forEach(v => { cat[v.categoria] = (cat[v.categoria] || 0) + Number(v.cantidad || 0); });
           renderCategorias(cat);
 
         } catch (e) { console.error(e); }
@@ -186,70 +268,45 @@
       function renderCategorias(cat) {
         const cont = document.getElementById('votos-categoria');
         const total = Object.values(cat).reduce((a, b) => a + b, 0);
-
         if (total === 0) {
           cont.innerHTML = '<div class="empty-state"><p>Sin votos cargados aún</p></div>';
           return;
         }
-
-        const etiquetas = {
-          COMPLETO: '🟢 Completo',
-          CRUZADO: '🔴 Cruzado',
-          BLANCO: '⚪ Blanco',
-          NULO: '⚫ Nulo'
-        };
-        const clases = {
-          COMPLETO: 'completo',
-          CRUZADO: 'cruzado',
-          BLANCO: 'blanco',
-          NULO: 'nulo'
-        };
-
+        const etiquetas = { COMPLETO: '🟢 Completo', CRUZADO: '🔴 Cruzado', BLANCO: '⚪ Blanco', NULO: '⚫ Nulo' };
+        const clases = { COMPLETO: 'completo', CRUZADO: 'cruzado', BLANCO: 'blanco', NULO: 'nulo' };
         cont.innerHTML = Object.keys(cat).map(k => {
           const pct = total > 0 ? (cat[k] / total) * 100 : 0;
           return `
             <div class="cat-barra">
               <div class="cat-label">${etiquetas[k]}</div>
-              <div class="cat-track">
-                <div class="cat-fill ${clases[k]}" style="width: ${pct}%"></div>
-              </div>
+              <div class="cat-track"><div class="cat-fill ${clases[k]}" style="width: ${pct}%"></div></div>
               <div class="cat-total">${cat[k]}</div>
             </div>
           `;
         }).join('');
       }
 
-      // ---------- RANKING PUNTEROS ----------
+      // ============================================================
+      // RANKING PUNTEROS (tab resumen)
+      // ============================================================
       async function cargarRanking() {
         const cont = document.getElementById('ranking-punteros');
         try {
-          const [asistencias, usuarios] = await Promise.all([
-            API.listarAsistencias(),
-            API.listarUsuarios().catch(() => [])
-          ]);
-
-          const mias = asistencias.filter(a =>
-            a.id_escuela === usuario.id_escuela &&
-            a.estado === 'VALIDO'
-          );
+          const asistencias = await API.listarAsistencias();
+          const mias = asistencias.filter(a => a.id_escuela === usuario.id_escuela && a.estado === 'VALIDO');
 
           const conteo = {};
           mias.forEach(a => { conteo[a.id_usuario] = (conteo[a.id_usuario] || 0) + 1; });
 
-          const arr = Object.keys(conteo).map(id => {
-            const u = usuarios.find(x => x.id_usuario === id);
-            return {
-              id,
-              nombre: u ? u.nombre_completo : id,
-              rol: u ? u.rol : '—',
-              asistencias: conteo[id]
-            };
-          }).sort((a, b) => b.asistencias - a.asistencias);
-
-          if (arr.length === 0) {
+          if (Object.keys(conteo).length === 0) {
             cont.innerHTML = '<div class="empty-state"><p>Sin registros aún</p></div>';
             return;
           }
+
+          // Necesitamos los nombres. Como el coordinador no puede listar usuarios, usamos los que tenemos.
+          const arr = Object.keys(conteo).map(id => ({
+            id, asistencias: conteo[id]
+          })).sort((a, b) => b.asistencias - a.asistencias);
 
           cont.innerHTML = arr.slice(0, 10).map((p, i) => {
             const clase = i === 0 ? 'top1' : i === 1 ? 'top2' : i === 2 ? 'top3' : '';
@@ -257,8 +314,7 @@
               <div class="ranking-item">
                 <div class="ranking-pos ${clase}">${i + 1}</div>
                 <div class="ranking-info">
-                  <div class="ranking-nombre">${UTILS.escaparHTML(p.nombre)}</div>
-                  <div class="ranking-meta">${UTILS.escaparHTML(p.rol)}</div>
+                  <div class="ranking-nombre">${UTILS.escaparHTML(p.id)}</div>
                 </div>
                 <div class="ranking-valor">${p.asistencias}</div>
               </div>
@@ -269,28 +325,198 @@
         }
       }
 
-      // ---------- ÚLTIMAS ASISTENCIAS ----------
-      async function cargarUltimasAsistencias() {
-        const cont = document.getElementById('ultimas-asistencias');
+      // ============================================================
+      // LISTA DE PUNTEROS (tab punteros)
+      // ============================================================
+      async function cargarPunteros() {
+        const cont = document.getElementById('lista-punteros');
         try {
           const asistencias = await API.listarAsistencias();
-          const mias = asistencias
-            .filter(a => a.id_escuela === usuario.id_escuela)
-            .slice(-20)
-            .reverse();
+          const mias = asistencias.filter(a => a.id_escuela === usuario.id_escuela && a.estado === 'VALIDO');
+
+          const conteo = {};
+          mias.forEach(a => {
+            if (!conteo[a.id_usuario]) conteo[a.id_usuario] = { total: 0, validas: 0, duplicadas: 0 };
+            conteo[a.id_usuario].total++;
+            if (a.estado === 'VALIDO') conteo[a.id_usuario].validas++;
+          });
+
+          const ids = Object.keys(conteo);
+          if (ids.length === 0) {
+            cont.innerHTML = '<div class="empty-state"><p>Sin actividad aún</p></div>';
+            return;
+          }
+
+          cont.innerHTML = `
+            <div class="tabla-wrapper">
+              <table class="tabla">
+                <thead>
+                  <tr>
+                    <th>ID Usuario</th>
+                    <th style="text-align: right">Asistencias</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${ids.map(id => `
+                    <tr>
+                      <td class="font-semibold">${UTILS.escaparHTML(id)}</td>
+                      <td style="text-align: right" class="text-rojo font-bold">${conteo[id].validas}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          `;
+        } catch (e) {
+          cont.innerHTML = '<div class="empty-state"><p>Error al cargar</p></div>';
+        }
+      }
+
+      document.getElementById('btn-refresh-punteros').addEventListener('click', cargarPunteros);
+
+      // ============================================================
+      // MESAS
+      // ============================================================
+      document.querySelectorAll('[data-filtro]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('[data-filtro]').forEach(b => {
+            b.classList.remove('btn-primary');
+            b.classList.add('btn-secondary');
+          });
+          btn.classList.remove('btn-secondary');
+          btn.classList.add('btn-primary');
+          filtroMesas = btn.dataset.filtro;
+          renderMesas();
+        });
+      });
+
+      async function cargarMesas() {
+        try {
+          cacheMesas = await API.request('mesasTodas');
+          renderMesas();
+        } catch (e) { console.error(e); }
+      }
+
+      function renderMesas() {
+        const cont = document.getElementById('lista-mesas');
+        let lista = cacheMesas;
+        if (filtroMesas === 'abiertas') lista = cacheMesas.filter(m => m.estado === 'ABIERTA');
+        if (filtroMesas === 'cerradas') lista = cacheMesas.filter(m => m.estado === 'CERRADA');
+
+        if (lista.length === 0) {
+          cont.innerHTML = '<div class="empty-state"><p>Sin mesas para mostrar</p></div>';
+          return;
+        }
+
+        cont.innerHTML = `
+          <div class="tabla-wrapper">
+            <table class="tabla">
+              <thead>
+                <tr>
+                  <th>Mesa</th>
+                  <th>Estado</th>
+                  <th>Abrió</th>
+                  <th>Apertura</th>
+                  <th>Cierre</th>
+                  <th style="text-align: right">Votos</th>
+                  <th style="text-align: right">Acción</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${lista.map(m => `
+                  <tr>
+                    <td class="font-bold">${UTILS.escaparHTML(m.numero_mesa)}</td>
+                    <td><span class="badge ${m.estado === 'ABIERTA' ? 'badge-exito' : 'badge-gris'}">${m.estado}</span></td>
+                    <td class="text-sm">${UTILS.escaparHTML(m.nombre_apertura)}</td>
+                    <td class="text-sm">${UTILS.formatearHora(m.hora_apertura)}</td>
+                    <td class="text-sm">${m.hora_cierre ? UTILS.formatearHora(m.hora_cierre) : '—'}</td>
+                    <td style="text-align: right" class="font-bold">${m.total_votos}</td>
+                    <td style="text-align: right">
+                      ${m.estado === 'ABIERTA'
+                        ? `<button class="btn btn-danger btn-sm" data-forzar="${m.id_apertura}">Forzar cierre</button>`
+                        : '—'}
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+
+        cont.querySelectorAll('button[data-forzar]').forEach(btn => {
+          btn.addEventListener('click', () => forzarCierre(btn.dataset.forzar));
+        });
+      }
+
+      async function forzarCierre(id) {
+        if (!confirm('¿Forzar el cierre de esta mesa?')) return;
+        try {
+          await API.request('forzarCierreMesa', { id_apertura: id });
+          UI.toast('Mesa cerrada', 'exito');
+          cargarMesas();
+          cargarResumen();
+        } catch (err) {
+          UI.toast(err.message || 'Error', 'error');
+        }
+      }
+
+      document.getElementById('btn-refresh-mesas').addEventListener('click', cargarMesas);
+
+      // ============================================================
+      // PC DEL COLEGIO
+      // ============================================================
+      async function cargarPC() {
+        const cont = document.getElementById('lista-pc');
+        try {
+          const registros = await API.request('listarRegistrosPC');
+          if (registros.length === 0) {
+            cont.innerHTML = '<div class="empty-state"><p>Sin registros aún</p></div>';
+            return;
+          }
+
+          const ultimos = registros.slice(-50).reverse();
+          cont.innerHTML = ultimos.map(r => `
+            <div class="flex-between" style="padding: 8px 0; border-bottom: 1px solid var(--borde-2);">
+              <div>
+                <div class="font-semibold">${UTILS.escaparHTML(r.apellido)}, ${UTILS.escaparHTML(r.nombre)}</div>
+                <div class="text-xs text-2">
+                  ${r.mesa ? 'Mesa ' + UTILS.escaparHTML(r.mesa) + ' · ' : ''}
+                  ${r.dni ? 'DNI ' + UTILS.escaparHTML(r.dni) + ' · ' : ''}
+                  ${UTILS.formatearHora(r.hora_registro)}
+                </div>
+              </div>
+              <span class="badge badge-exito">✓</span>
+            </div>
+          `).join('');
+        } catch (e) {
+          cont.innerHTML = '<div class="empty-state"><p>Error al cargar</p></div>';
+        }
+      }
+
+      document.getElementById('btn-refresh-pc').addEventListener('click', cargarPC);
+
+      // ============================================================
+      // ASISTENCIAS
+      // ============================================================
+      async function cargarAsistencias() {
+        const cont = document.getElementById('lista-asistencias');
+        try {
+          const asistencias = await API.listarAsistencias();
+          const mias = asistencias.filter(a => a.id_escuela === usuario.id_escuela);
 
           if (mias.length === 0) {
             cont.innerHTML = '<div class="empty-state"><p>Sin asistencias aún</p></div>';
             return;
           }
 
-          cont.innerHTML = mias.map(a => `
+          const ultimas = mias.slice(-50).reverse();
+          cont.innerHTML = ultimas.map(a => `
             <div class="flex-between" style="padding: 8px 0; border-bottom: 1px solid var(--borde-2);">
               <div>
                 <div class="font-semibold">${UTILS.escaparHTML(a.nombre_persona || '(sin nombre)')}</div>
                 <div class="text-xs text-2">
                   Mesa ${UTILS.escaparHTML(a.numero_mesa)}
-                  ${a.dni ? '· DNI ' + UTILS.escaparHTML(a.dni) : ''}
+                  ${a.dni ? ' · DNI ' + UTILS.escaparHTML(a.dni) : ''}
                   · ${UTILS.formatearHora(a.hora_registro)}
                 </div>
               </div>
@@ -302,22 +528,19 @@
         }
       }
 
-      // ---------- REFRESH ----------
-      document.getElementById('btn-refresh').addEventListener('click', async () => {
-        await Promise.all([cargarKPIs(), cargarRanking(), cargarUltimasAsistencias()]);
-        UI.toast('Datos actualizados', 'info');
-      });
+      document.getElementById('btn-refresh-asist').addEventListener('click', cargarAsistencias);
 
-      // ---------- INICIALIZAR ----------
+      // ============================================================
+      // INICIALIZAR
+      // ============================================================
       await cargarInfoColegio();
       await cargarEstadoDia();
-      await cargarKPIs();
+      await cargarResumen();
       await cargarRanking();
-      await cargarUltimasAsistencias();
 
       setInterval(() => {
         cargarEstadoDia();
-        cargarKPIs();
+        cargarResumen();
       }, 30000);
 
     })();
