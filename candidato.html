@@ -11,6 +11,10 @@
   <link rel="stylesheet" href="assets/css/components.css">
   <link rel="stylesheet" href="assets/css/layout.css">
   <link rel="stylesheet" href="assets/css/dashboard.css">
+
+  <!-- jsPDF para exportación PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body>
 
@@ -24,23 +28,18 @@
   <main class="main">
     <div class="container">
 
-      <div class="page-header flex-between" style="flex-wrap: wrap; gap: var(--esp-4);">
-  <div class="flex" style="gap: var(--esp-4); align-items: center;">
-    <img src="assets/img/pablo-alderete.jpg" alt="Pablo Alderete" 
-         style="width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 3px solid var(--rojo-600);"
-         onerror="this.style.display='none'">
-    <div>
-      <h1 class="page-title">Dashboard General</h1>
-      <p class="page-subtitle">Pablo Alderete · Concejal Lista 1 — ANR</p>
-    </div>
-  </div>
-  <div class="text-right">
-    <div class="text-xs text-3">Actualización automática</div>
-    <div class="text-sm font-semibold">cada 30 segundos</div>
-  </div>
-</div>
+      <div class="page-header flex" style="gap: var(--esp-4); align-items: center; margin-bottom: var(--esp-5);">
+        <img src="assets/img/pablo-alderete.jpg" alt="Pablo Alderete"
+             style="width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 3px solid var(--rojo-600);"
+             onerror="this.style.display='none'">
+        <div style="flex: 1;">
+          <h1 class="page-title">Dashboard General</h1>
+          <p class="page-subtitle">Pablo Alderete · Concejal Lista 1 — ANR</p>
+        </div>
+        <button class="btn btn-primary" id="btn-exportar-pdf">📄 Exportar PDF</button>
+      </div>
 
-      <!-- KPIs principales -->
+      <!-- KPIs -->
       <div class="kpi-grid">
         <div class="kpi-card">
           <div class="kpi-label">Asistencias</div>
@@ -53,47 +52,127 @@
           <div class="kpi-sub">Concejal</div>
         </div>
         <div class="kpi-card">
-          <div class="kpi-label">Personas movidas</div>
+          <div class="kpi-label">Movidas</div>
           <div class="kpi-value info" id="kpi-movidas">0</div>
           <div class="kpi-sub">Por choferes</div>
         </div>
         <div class="kpi-card">
-          <div class="kpi-label">Vocas de urna</div>
+          <div class="kpi-label">Vocas</div>
           <div class="kpi-value exito" id="kpi-vocas">0</div>
           <div class="kpi-sub">Sondeos</div>
         </div>
-      </div>
-
-      <!-- Votos por categoría -->
-      <div class="card mb-5">
-        <div class="card-header">
-          <h2 class="card-title">🗳️ Distribución de votos</h2>
-          <button class="btn btn-ghost btn-sm" id="btn-refresh">🔄</button>
+        <div class="kpi-card">
+          <div class="kpi-label">PC</div>
+          <div class="kpi-value" id="kpi-pc">0</div>
+          <div class="kpi-sub">Puesto de control</div>
         </div>
-        <div class="card-body" id="votos-categoria">
-          <div class="empty-state"><p>Cargando...</p></div>
-        </div>
-      </div>
-
-      <!-- Por colegio -->
-      <div class="card mb-5">
-        <div class="card-header">
-          <h2 class="card-title">🏫 Totales por colegio</h2>
-        </div>
-        <div class="card-body" id="totales-colegio">
-          <div class="empty-state"><p>Cargando...</p></div>
+        <div class="kpi-card">
+          <div class="kpi-label">Envíos Zona</div>
+          <div class="kpi-value amarillo" id="kpi-jz">0</div>
+          <div class="kpi-sub">Familias enviadas</div>
         </div>
       </div>
 
-      <!-- Ranking punteros -->
-      <div class="card mb-5">
-        <div class="card-header">
-          <h2 class="card-title">🏆 Ranking de punteros</h2>
-        </div>
-        <div class="card-body" id="ranking-punteros">
-          <div class="empty-state"><p>Cargando...</p></div>
-        </div>
+      <!-- TABS -->
+      <div class="tabs">
+        <button class="tab active" data-tab="resumen">📊 Resumen</button>
+        <button class="tab" data-tab="mesas">🪑 Mesas</button>
+        <button class="tab" data-tab="pc">🎯 PC</button>
+        <button class="tab" data-tab="jz">📦 Jefes de Zona</button>
+        <button class="tab" data-tab="usuarios">👥 Usuarios</button>
       </div>
+
+      <!-- TAB: RESUMEN -->
+      <section id="tab-resumen" class="tab-content">
+
+        <div class="card mb-5">
+          <div class="card-header">
+            <h2 class="card-title">🗳️ Distribución de votos</h2>
+            <button class="btn btn-ghost btn-sm" id="btn-refresh">🔄</button>
+          </div>
+          <div class="card-body" id="votos-categoria">
+            <div class="empty-state"><p>Cargando...</p></div>
+          </div>
+        </div>
+
+        <div class="card mb-5">
+          <div class="card-header">
+            <h2 class="card-title">🏫 Totales por colegio</h2>
+          </div>
+          <div class="card-body" id="totales-colegio">
+            <div class="empty-state"><p>Cargando...</p></div>
+          </div>
+        </div>
+
+        <div class="card mb-5">
+          <div class="card-header">
+            <h2 class="card-title">🏆 Ranking de punteros</h2>
+          </div>
+          <div class="card-body" id="ranking-punteros">
+            <div class="empty-state"><p>Cargando...</p></div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- TAB: MESAS -->
+      <section id="tab-mesas" class="tab-content hidden">
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">🪑 Mesas (vista global)</h2>
+            <button class="btn btn-ghost btn-sm" id="btn-refresh-mesas">🔄</button>
+          </div>
+          <div class="card-body">
+            <div style="display: flex; gap: var(--esp-2); margin-bottom: var(--esp-3); flex-wrap: wrap;">
+              <button class="btn btn-primary btn-sm" data-filtro="todas">Todas</button>
+              <button class="btn btn-secondary btn-sm" data-filtro="abiertas">Abiertas</button>
+              <button class="btn btn-secondary btn-sm" data-filtro="cerradas">Cerradas</button>
+            </div>
+            <div id="lista-mesas">
+              <div class="empty-state"><p>Cargando...</p></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB: PC -->
+      <section id="tab-pc" class="tab-content hidden">
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">🎯 Puesto de Control</h2>
+            <button class="btn btn-ghost btn-sm" id="btn-refresh-pc">🔄</button>
+          </div>
+          <div class="card-body" id="lista-pc">
+            <div class="empty-state"><p>Cargando...</p></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB: JEFES DE ZONA -->
+      <section id="tab-jz" class="tab-content hidden">
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">📦 Envíos de Jefes de Zona</h2>
+            <button class="btn btn-ghost btn-sm" id="btn-refresh-jz">🔄</button>
+          </div>
+          <div class="card-body" id="lista-jz">
+            <div class="empty-state"><p>Cargando...</p></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB: USUARIOS (reasignar) -->
+      <section id="tab-usuarios" class="tab-content hidden">
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">👥 Usuarios — Reasignar colegio</h2>
+            <button class="btn btn-ghost btn-sm" id="btn-refresh-usuarios">🔄</button>
+          </div>
+          <div class="card-body" id="lista-usuarios">
+            <div class="empty-state"><p>Cargando...</p></div>
+          </div>
+        </div>
+      </section>
 
     </div>
   </main>
@@ -112,14 +191,43 @@
       AUTH.renderHeaderLogo();
       AUTH.renderHeaderUsuario(usuario);
 
-      // ---------- TOTALES GLOBALES ----------
-      async function cargarTotales() {
+      let cacheMesas = [];
+      let cacheUsuarios = [];
+      let cacheEscuelas = [];
+      let filtroMesas = 'todas';
+      let ultimosTotales = null;
+
+      // ============================================================
+      // TABS
+      // ============================================================
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+          document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+          tab.classList.add('active');
+          document.getElementById('tab-' + tab.dataset.tab).classList.remove('hidden');
+
+          const t = tab.dataset.tab;
+          if (t === 'mesas')     cargarMesas();
+          if (t === 'pc')        cargarPC();
+          if (t === 'jz')        cargarJZ();
+          if (t === 'usuarios')  cargarUsuarios();
+        });
+      });
+
+      // ============================================================
+      // KPIs
+      // ============================================================
+      async function cargarKPIs() {
         try {
-          const t = await API.totalesGlobales();
+          const t = await API.request('totalesGlobalesV2');
+          ultimosTotales = t;
           document.getElementById('kpi-asistencias').textContent = UTILS.formatearNumero(t.totalAsistencias);
           document.getElementById('kpi-votos').textContent = UTILS.formatearNumero(t.totalVotosGeneral);
           document.getElementById('kpi-movidas').textContent = UTILS.formatearNumero(t.totalPersonasMovidas);
           document.getElementById('kpi-vocas').textContent = UTILS.formatearNumero(t.totalVocas);
+          document.getElementById('kpi-pc').textContent = UTILS.formatearNumero(t.totalPC);
+          document.getElementById('kpi-jz').textContent = UTILS.formatearNumero(t.totalEnviosZona);
           renderCategorias(t.totalVotos);
         } catch (e) { console.error(e); }
       }
@@ -131,12 +239,7 @@
           cont.innerHTML = '<div class="empty-state"><p>Sin votos cargados aún</p></div>';
           return;
         }
-        const etiquetas = {
-          COMPLETO: '🟢 Completo',
-          CRUZADO: '🔴 Cruzado',
-          BLANCO: '⚪ Blanco',
-          NULO: '⚫ Nulo'
-        };
+        const etiquetas = { COMPLETO: '🟢 Completo', CRUZADO: '🔴 Cruzado', BLANCO: '⚪ Blanco', NULO: '⚫ Nulo' };
         const clases = { COMPLETO: 'completo', CRUZADO: 'cruzado', BLANCO: 'blanco', NULO: 'nulo' };
         cont.innerHTML = Object.keys(cat).map(k => {
           const pct = total > 0 ? (cat[k] / total) * 100 : 0;
@@ -144,19 +247,20 @@
           return `
             <div class="cat-barra">
               <div class="cat-label">${etiquetas[k]}</div>
-              <div class="cat-track">
-                <div class="cat-fill ${clases[k]}" style="width: ${pct}%"></div>
-              </div>
+              <div class="cat-track"><div class="cat-fill ${clases[k]}" style="width: ${pct}%"></div></div>
               <div class="cat-total">${cat[k]} <span class="text-xs text-3">(${pctTexto}%)</span></div>
             </div>
           `;
         }).join('');
       }
 
-      // ---------- POR COLEGIO ----------
+      // ============================================================
+      // TOTALES POR COLEGIO
+      // ============================================================
       async function cargarPorColegio() {
         const cont = document.getElementById('totales-colegio');
         try {
+          cacheEscuelas = await API.listarEscuelas();
           const escuelas = await API.totalesPorColegio();
           if (escuelas.length === 0) {
             cont.innerHTML = '<div class="empty-state"><p>Sin datos</p></div>';
@@ -189,7 +293,9 @@
         }
       }
 
-      // ---------- RANKING PUNTEROS ----------
+      // ============================================================
+      // RANKING PUNTEROS
+      // ============================================================
       async function cargarRanking() {
         const cont = document.getElementById('ranking-punteros');
         try {
@@ -216,21 +322,367 @@
         }
       }
 
-      // ---------- REFRESH MANUAL ----------
+      // ============================================================
+      // MESAS
+      // ============================================================
+      document.querySelectorAll('[data-filtro]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('[data-filtro]').forEach(b => {
+            b.classList.remove('btn-primary');
+            b.classList.add('btn-secondary');
+          });
+          btn.classList.remove('btn-secondary');
+          btn.classList.add('btn-primary');
+          filtroMesas = btn.dataset.filtro;
+          renderMesas();
+        });
+      });
+
+      async function cargarMesas() {
+        try {
+          cacheMesas = await API.request('mesasTodas');
+          renderMesas();
+        } catch (e) { console.error(e); }
+      }
+
+      function renderMesas() {
+        const cont = document.getElementById('lista-mesas');
+        let lista = cacheMesas;
+        if (filtroMesas === 'abiertas') lista = cacheMesas.filter(m => m.estado === 'ABIERTA');
+        if (filtroMesas === 'cerradas') lista = cacheMesas.filter(m => m.estado === 'CERRADA');
+
+        if (lista.length === 0) {
+          cont.innerHTML = '<div class="empty-state"><p>Sin mesas para mostrar</p></div>';
+          return;
+        }
+
+        cont.innerHTML = `
+          <div class="tabla-wrapper">
+            <table class="tabla">
+              <thead>
+                <tr>
+                  <th>Colegio</th>
+                  <th>Mesa</th>
+                  <th>Estado</th>
+                  <th>Abrió</th>
+                  <th>Apertura</th>
+                  <th>Cierre</th>
+                  <th style="text-align: right">Votos</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${lista.map(m => `
+                  <tr>
+                    <td>${UTILS.escaparHTML(m.id_escuela)}</td>
+                    <td class="font-bold">${UTILS.escaparHTML(m.numero_mesa)}</td>
+                    <td><span class="badge ${m.estado === 'ABIERTA' ? 'badge-exito' : 'badge-gris'}">${m.estado}</span></td>
+                    <td class="text-sm">${UTILS.escaparHTML(m.nombre_apertura)}</td>
+                    <td class="text-sm">${UTILS.formatearHora(m.hora_apertura)}</td>
+                    <td class="text-sm">${m.hora_cierre ? UTILS.formatearHora(m.hora_cierre) : '—'}</td>
+                    <td style="text-align: right" class="font-bold">${m.total_votos}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+      }
+
+      document.getElementById('btn-refresh-mesas').addEventListener('click', cargarMesas);
+
+      // ============================================================
+      // PC
+      // ============================================================
+      async function cargarPC() {
+        const cont = document.getElementById('lista-pc');
+        try {
+          const registros = await API.request('listarRegistrosPC');
+          if (registros.length === 0) {
+            cont.innerHTML = '<div class="empty-state"><p>Sin registros aún</p></div>';
+            return;
+          }
+          const ultimos = registros.slice(-100).reverse();
+          cont.innerHTML = `
+            <div class="tabla-wrapper">
+              <table class="tabla">
+                <thead>
+                  <tr>
+                    <th>Apellido, Nombre</th>
+                    <th>DNI</th>
+                    <th>Colegio</th>
+                    <th>Mesa</th>
+                    <th>Hora</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${ultimos.map(r => `
+                    <tr>
+                      <td class="font-semibold">${UTILS.escaparHTML(r.apellido)}, ${UTILS.escaparHTML(r.nombre)}</td>
+                      <td>${UTILS.escaparHTML(r.dni || '—')}</td>
+                      <td>${UTILS.escaparHTML(r.colegio || '—')}</td>
+                      <td>${UTILS.escaparHTML(r.mesa || '—')}</td>
+                      <td class="text-sm">${UTILS.formatearHora(r.hora_registro)}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          `;
+        } catch (e) {
+          cont.innerHTML = '<div class="empty-state"><p>Error al cargar</p></div>';
+        }
+      }
+
+      document.getElementById('btn-refresh-pc').addEventListener('click', cargarPC);
+
+      // ============================================================
+      // JEFES DE ZONA
+      // ============================================================
+      async function cargarJZ() {
+        const cont = document.getElementById('lista-jz');
+        try {
+          const envios = await API.request('listarEnviosZona');
+          if (envios.length === 0) {
+            cont.innerHTML = '<div class="empty-state"><p>Sin envíos aún</p></div>';
+            return;
+          }
+          const ultimos = envios.slice(-100).reverse();
+          cont.innerHTML = `
+            <div class="tabla-wrapper">
+              <table class="tabla">
+                <thead>
+                  <tr>
+                    <th>Familia</th>
+                    <th style="text-align: right">Personas</th>
+                    <th>Zona / Barrio</th>
+                    <th>Tipo</th>
+                    <th>Hora</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${ultimos.map(e => `
+                    <tr>
+                      <td class="font-semibold">${UTILS.escaparHTML(e.apellido_familia)}</td>
+                      <td style="text-align: right" class="text-rojo font-bold">${e.cantidad_personas}</td>
+                      <td>${UTILS.escaparHTML(e.zona_barrio)}</td>
+                      <td>${e.tipo_envio === 'CHOFER' ? '🚗 Chofer' : '🚶 Propio'}</td>
+                      <td class="text-sm">${UTILS.formatearHora(e.hora_registro)}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          `;
+        } catch (e) {
+          cont.innerHTML = '<div class="empty-state"><p>Error al cargar</p></div>';
+        }
+      }
+
+      document.getElementById('btn-refresh-jz').addEventListener('click', cargarJZ);
+
+      // ============================================================
+      // USUARIOS (REASIGNAR)
+      // ============================================================
+      async function cargarUsuarios() {
+        const cont = document.getElementById('lista-usuarios');
+        try {
+          cacheEscuelas = await API.listarEscuelas();
+          const usuarios = await API.listarUsuarios();
+          cacheUsuarios = usuarios;
+
+          // Solo mostramos los que tienen colegio asignado (se pueden reasignar)
+          const conColegio = usuarios.filter(u => ['COORDINADOR', 'PUNTERO', 'VOCA'].includes(u.rol));
+
+          if (conColegio.length === 0) {
+            cont.innerHTML = '<div class="empty-state"><p>Sin usuarios reasignables</p></div>';
+            return;
+          }
+
+          cont.innerHTML = `
+            <div class="tabla-wrapper">
+              <table class="tabla">
+                <thead>
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Rol</th>
+                    <th>Colegio actual</th>
+                    <th style="text-align: right">Reasignar a</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${conColegio.map(u => {
+                    const esc = cacheEscuelas.find(e => e.id_escuela === u.id_escuela);
+                    return `
+                      <tr>
+                        <td class="font-semibold">${UTILS.escaparHTML(u.nombre_completo)}</td>
+                        <td><span class="badge badge-gris">${u.rol}</span></td>
+                        <td>${esc ? UTILS.escaparHTML(esc.nombre) : '—'}</td>
+                        <td style="text-align: right">
+                          <select class="form-select" style="display:inline-block; width: auto; padding: 4px 8px; font-size: 13px;" data-usuario="${u.id_usuario}">
+                            <option value="">— Elegir —</option>
+                            ${cacheEscuelas.map(e => `
+                              <option value="${e.id_escuela}" ${e.id_escuela === u.id_escuela ? 'disabled' : ''}>
+                                ${UTILS.escaparHTML(e.nombre)}
+                              </option>
+                            `).join('')}
+                          </select>
+                          <button class="btn btn-primary btn-sm" data-reasignar="${u.id_usuario}" data-nombre="${UTILS.escaparHTML(u.nombre_completo)}">Mover</button>
+                        </td>
+                      </tr>
+                    `;
+                  }).join('')}
+                </tbody>
+              </table>
+            </div>
+          `;
+
+          cont.querySelectorAll('button[data-reasignar]').forEach(btn => {
+            btn.addEventListener('click', () => {
+              const id = btn.dataset.reasignar;
+              const sel = cont.querySelector(`select[data-usuario="${id}"]`);
+              reasignar(id, sel.value, btn.dataset.nombre);
+            });
+          });
+
+        } catch (e) {
+          cont.innerHTML = '<div class="empty-state"><p>Error al cargar</p></div>';
+        }
+      }
+
+      async function reasignar(idUsuario, idEscuelaNueva, nombre) {
+        if (!idEscuelaNueva) {
+          UI.toast('Elegí un colegio primero', 'alerta');
+          return;
+        }
+        if (!confirm(`¿Mover a ${nombre} al colegio seleccionado?`)) return;
+        try {
+          await API.reasignarUsuario(idUsuario, idEscuelaNueva);
+          UI.toast('Usuario reasignado', 'exito');
+          cargarUsuarios();
+        } catch (err) {
+          UI.toast(err.message || 'Error', 'error');
+        }
+      }
+
+      document.getElementById('btn-refresh-usuarios').addEventListener('click', cargarUsuarios);
+
+      // ============================================================
+      // EXPORTAR PDF
+      // ============================================================
+      document.getElementById('btn-exportar-pdf').addEventListener('click', async () => {
+        try {
+          UI.loader(true, 'Generando PDF...');
+
+          const { jsPDF } = window.jspdf;
+          const doc = new jsPDF();
+
+          // Título
+          doc.setFontSize(20);
+          doc.setTextColor(211, 47, 47);
+          doc.text('Control Electoral 2026', 105, 20, { align: 'center' });
+          doc.setFontSize(14);
+          doc.setTextColor(60, 60, 60);
+          doc.text('Pablo Alderete · Concejal Lista 1 — ANR', 105, 28, { align: 'center' });
+          doc.setFontSize(11);
+          doc.setTextColor(100, 100, 100);
+          doc.text('Fecha: ' + new Date().toLocaleString('es-PY'), 105, 35, { align: 'center' });
+
+          // KPIs
+          const t = ultimosTotales || await API.request('totalesGlobalesV2');
+
+          doc.setFontSize(14);
+          doc.setTextColor(30, 30, 30);
+          doc.text('Resumen general', 14, 50);
+
+          const kpis = [
+            ['Asistencias', t.totalAsistencias],
+            ['Votos totales', t.totalVotosGeneral],
+            ['Votos COMPLETO', t.totalVotos.COMPLETO],
+            ['Votos CRUZADO', t.totalVotos.CRUZADO],
+            ['Votos BLANCO', t.totalVotos.BLANCO],
+            ['Votos NULO', t.totalVotos.NULO],
+            ['Personas movidas (choferes)', t.totalPersonasMovidas],
+            ['Vocas de urna', t.totalVocas],
+            ['Registros PC', t.totalPC],
+            ['Envíos de jefes de zona', t.totalEnviosZona],
+            ['Personas enviadas por zona', t.totalPersonasZona]
+          ];
+
+          doc.autoTable({
+            startY: 55,
+            head: [['Métrica', 'Valor']],
+            body: kpis.map(k => [k[0], String(k[1])]),
+            theme: 'striped',
+            headStyles: { fillColor: [211, 47, 47] }
+          });
+
+          // Totales por colegio
+          const porColegio = await API.totalesPorColegio();
+          if (porColegio.length > 0) {
+            doc.setFontSize(14);
+            doc.text('Totales por colegio', 14, doc.lastAutoTable.finalY + 15);
+
+            doc.autoTable({
+              startY: doc.lastAutoTable.finalY + 20,
+              head: [['Colegio', 'Asistencias', 'Votos']],
+              body: porColegio.map(e => [e.nombre, String(e.asistencias), String(e.totalVotos)]),
+              theme: 'striped',
+              headStyles: { fillColor: [211, 47, 47] }
+            });
+          }
+
+          // Ranking punteros
+          const ranking = await API.rankingPunteros();
+          if (ranking.length > 0) {
+            doc.setFontSize(14);
+            doc.text('Ranking de punteros', 14, doc.lastAutoTable.finalY + 15);
+
+            doc.autoTable({
+              startY: doc.lastAutoTable.finalY + 20,
+              head: [['#', 'Nombre', 'Rol', 'Colegio', 'Asistencias']],
+              body: ranking.slice(0, 20).map((p, i) => [
+                String(i + 1),
+                p.nombre,
+                p.rol,
+                p.id_escuela || '—',
+                String(p.asistencias)
+              ]),
+              theme: 'striped',
+              headStyles: { fillColor: [211, 47, 47] }
+            });
+          }
+
+          // Guardar
+          const nombreArchivo = 'reporte_electoral_' + new Date().toISOString().slice(0, 10) + '.pdf';
+          doc.save(nombreArchivo);
+
+          UI.toast('PDF generado', 'exito');
+
+        } catch (err) {
+          console.error(err);
+          UI.toast('Error al generar PDF: ' + (err.message || ''), 'error');
+        } finally {
+          UI.loader(false);
+        }
+      });
+
+      // ============================================================
+      // REFRESH
+      // ============================================================
       document.getElementById('btn-refresh').addEventListener('click', async () => {
-        await Promise.all([cargarTotales(), cargarPorColegio(), cargarRanking()]);
+        await Promise.all([cargarKPIs(), cargarPorColegio(), cargarRanking()]);
         UI.toast('Datos actualizados', 'info');
       });
 
-      // ---------- INICIALIZAR ----------
-      await cargarTotales();
+      // ============================================================
+      // INICIALIZAR
+      // ============================================================
+      await cargarKPIs();
       await cargarPorColegio();
       await cargarRanking();
 
       setInterval(() => {
-        cargarTotales();
-        cargarPorColegio();
-        cargarRanking();
+        cargarKPIs();
       }, 30000);
 
     })();
