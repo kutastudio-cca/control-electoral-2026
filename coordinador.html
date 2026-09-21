@@ -261,7 +261,7 @@
           const cat = { COMPLETO: 0, CRUZADO: 0, BLANCO: 0, NULO: 0 };
           votosMios.forEach(v => { cat[v.categoria] = (cat[v.categoria] || 0) + Number(v.cantidad || 0); });
           renderCategorias(cat);
-
+          renderRanking(asistencias);
         } catch (e) { console.error(e); }
       }
 
@@ -289,10 +289,39 @@
       // ============================================================
       // RANKING PUNTEROS (tab resumen)
       // ============================================================
-      async function cargarRanking() {
+            function renderRanking(asistencias) {
         const cont = document.getElementById('ranking-punteros');
         try {
-          const asistencias = await API.listarAsistencias();
+          const mias = asistencias.filter(a => a.id_escuela === usuario.id_escuela && a.estado === 'VALIDO');
+
+          const conteo = {};
+          mias.forEach(a => { conteo[a.id_usuario] = (conteo[a.id_usuario] || 0) + 1; });
+
+          if (Object.keys(conteo).length === 0) {
+            cont.innerHTML = '<div class="empty-state"><p>Sin registros aún</p></div>';
+            return;
+          }
+
+          const arr = Object.keys(conteo).map(id => ({
+            id, asistencias: conteo[id]
+          })).sort((a, b) => b.asistencias - a.asistencias);
+
+          cont.innerHTML = arr.slice(0, 10).map((p, i) => {
+            const clase = i === 0 ? 'top1' : i === 1 ? 'top2' : i === 2 ? 'top3' : '';
+            return `
+              <div class="ranking-item">
+                <div class="ranking-pos ${clase}">${i + 1}</div>
+                <div class="ranking-info">
+                  <div class="ranking-nombre">${UTILS.escaparHTML(p.id)}</div>
+                </div>
+                <div class="ranking-valor">${p.asistencias}</div>
+              </div>
+            `;
+          }).join('');
+        } catch (e) {
+          cont.innerHTML = '<div class="empty-state"><p>Error al cargar</p></div>';
+        }
+      }
           const mias = asistencias.filter(a => a.id_escuela === usuario.id_escuela && a.estado === 'VALIDO');
 
           const conteo = {};
@@ -533,10 +562,13 @@
       // ============================================================
       // INICIALIZAR
       // ============================================================
+            // Cargar secuencial con delays para evitar concurrencia
       await cargarInfoColegio();
+      await new Promise(r => setTimeout(r, 100));
       await cargarEstadoDia();
+      await new Promise(r => setTimeout(r, 100));
       await cargarResumen();
-      await cargarRanking();
+   
 
       setInterval(() => {
         cargarEstadoDia();
