@@ -220,6 +220,10 @@ const API = {
     return this.request('registrarVocasBatch', { items });
   },
 
+     cerrarMesaConVotos(id_apertura, votos) {
+    return this.request('cerrarMesaConVotos', { id_apertura, votos });
+  },
+   
   registrarPCsBatch(items) {
     return this.request('registrarPCsBatch', { items });
   }
