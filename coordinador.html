@@ -286,10 +286,10 @@
         }).join('');
       }
 
-      // ============================================================
+            // ============================================================
       // RANKING PUNTEROS (tab resumen)
       // ============================================================
-            function renderRanking(asistencias) {
+      function renderRanking(asistencias) {
         const cont = document.getElementById('ranking-punteros');
         try {
           const mias = asistencias.filter(a => a.id_escuela === usuario.id_escuela && a.estado === 'VALIDO');
