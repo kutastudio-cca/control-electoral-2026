@@ -37,12 +37,37 @@ const AUTH = {
   },
 
   // Cerrar sesión
-  async logout() {
+   async logout() {
+    // Verificar si hay pendientes
+    if (typeof SYNC !== 'undefined') {
+      const pendientes = SYNC.contarPendientes();
+      if (pendientes.total > 0) {
+        const continuar = confirm(
+          `⚠️ Tenés ${pendientes.total} registro${pendientes.total !== 1 ? 's' : ''} pendiente${pendientes.total !== 1 ? 's' : ''} de sincronizar.\n\n` +
+          `Si cerrás sesión ahora, se van a intentar enviar automáticamente.\n\n` +
+          `¿Cerrar sesión igual?`
+        );
+        if (!continuar) return;
+        // Intentar sincronizar antes de salir
+        SYNC.forzarSync();
+        await new Promise(r => setTimeout(r, 1500));
+      }
+    }
+
     try {
       await API.logout();
     } catch (e) {
       // Ignorar errores al hacer logout
     }
+
+    // Limpiar cache y cola
+    if (typeof CACHE !== 'undefined') CACHE.limpiarTodo();
+    if (typeof SYNC !== 'undefined') {
+      Object.keys(SYNC.CONFIG).forEach(tipo => {
+        SYNC._escribirCola(tipo, []);
+      });
+    }
+
     UTILS.borrarSesion();
     this.irAlLogin();
   },
