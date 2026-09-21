@@ -585,21 +585,32 @@
       // ============================================================
       // ESCRUTINIO: CARGAR CONTADORES (backend + pendientes locales)
       // ============================================================
-      async function cargarContadores() {
+            async function cargarContadores() {
         if (!mesaActual) return;
         try {
-          // Contadores confirmados del backend
           const data = await API.request('contadoresMesa', { id_apertura: mesaActual.id_apertura });
-          contadores = data.contadores;
 
-          // Sumar pendientes locales de la cola
-          const cola = SYNC._leerCola('escrutinio').filter(c => c.datos.id_apertura === mesaActual.id_apertura);
+          // Contadores confirmados del backend
+          const confirmados = data.contadores || { COMPLETO: 0, CRUZADO: 0, BLANCO: 0, NULO: 0 };
+
+          // Contadores locales de la cola (pendientes)
+          const pendientes = { COMPLETO: 0, CRUZADO: 0, BLANCO: 0, NULO: 0 };
+          const cola = SYNC._leerCola('escrutinio')
+            .filter(c => c.datos.id_apertura === mesaActual.id_apertura);
           cola.forEach(c => {
             const cat = c.datos.categoria;
-            if (contadores[cat] !== undefined) {
-              contadores[cat] += Number(c.datos.cantidad || 1);
+            if (pendientes[cat] !== undefined) {
+              pendientes[cat] += Number(c.datos.cantidad || 1);
             }
           });
+
+          // Total = confirmados + pendientes (recalculado limpio cada vez)
+          contadores = {
+            COMPLETO: (confirmados.COMPLETO || 0) + pendientes.COMPLETO,
+            CRUZADO:  (confirmados.CRUZADO  || 0) + pendientes.CRUZADO,
+            BLANCO:   (confirmados.BLANCO   || 0) + pendientes.BLANCO,
+            NULO:     (confirmados.NULO     || 0) + pendientes.NULO
+          };
 
           renderContadores();
         } catch (err) {
