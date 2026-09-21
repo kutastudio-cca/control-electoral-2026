@@ -9,34 +9,38 @@ const SYNC = {
   PREFIX: 'dia_cola_',
 
   // Configuración por tipo de operación
-  CONFIG: {
+    CONFIG: {
     asistencia: {
       endpoint: 'registrarAsistenciasBatch',
-      intervaloMs: 15000,       // 15 seg
+      intervaloMs: 60000,       // 60 seg (bajamos la frecuencia)
       maxBatch: 10,
       maxIntentos: 5,
-      prioridad: 2              // 1 = más alto, 5 = más bajo
+      prioridad: 2,
+      modo: 'auto'              // worker automático
     },
     escrutinio: {
       endpoint: 'cargarVotosBatch',
-      intervaloMs: 10000,       // 10 seg
-      maxBatch: 20,
-      maxIntentos: 5,
-      prioridad: 1
+      intervaloMs: 999999,      // no se usa (modo manual)
+      maxBatch: 800,            // batch grande, se manda al cerrar mesa
+      maxIntentos: 3,
+      prioridad: 1,
+      modo: 'manual'            // solo se envía cuando se llama explícitamente
     },
     voca: {
       endpoint: 'registrarVocasBatch',
-      intervaloMs: 30000,       // 30 seg
+      intervaloMs: 30000,
       maxBatch: 10,
       maxIntentos: 4,
-      prioridad: 4
+      prioridad: 4,
+      modo: 'auto'
     },
     pc: {
       endpoint: 'registrarPCsBatch',
-      intervaloMs: 30000,       // 30 seg
+      intervaloMs: 30000,
       maxBatch: 10,
       maxIntentos: 4,
-      prioridad: 3
+      prioridad: 3,
+      modo: 'auto'
     }
   },
 
@@ -135,19 +139,22 @@ const SYNC = {
   // WORKERS
   // ============================================================
 
-  _arrancarWorker(tipo) {
+    _arrancarWorker(tipo) {
     if (this._workers[tipo]) return;
 
     const config = this.CONFIG[tipo];
 
-    // Desfase aleatorio inicial (0 a intervalo * 0.5)
+    // Si el modo es manual, NO arrancar worker automático
+    if (config.modo === 'manual') {
+      console.log('[SYNC] Worker manual para', tipo, '- no se autoinicia');
+      return;
+    }
+
     const desfase = Math.random() * config.intervaloMs * 0.5;
 
     setTimeout(() => {
-      // Sync inicial
       this._syncAhora(tipo);
 
-      // Sync periódico
       this._workers[tipo] = setInterval(() => {
         this._syncAhora(tipo);
       }, config.intervaloMs);
@@ -363,3 +370,53 @@ const SYNC = {
     return pendientes;
   }
 };
+  // ============================================================
+  // ENVÍO FORZADO (para cierre de mesa)
+  // ============================================================
+
+  /**
+   * Envía TODA la cola de un tipo ahora, en un solo batch
+   * Devuelve { ok, exitosos, errores, total }
+   */
+  async enviarTodoAhora(tipo) {
+    const config = this.CONFIG[tipo];
+    const cola = this._leerCola(tipo);
+
+    if (cola.length === 0) {
+      return { ok: true, total: 0, exitosos: 0, errores: 0 };
+    }
+
+    if (!navigator.onLine) {
+      return { ok: false, total: cola.length, exitosos: 0, errores: cola.length, error: 'Sin conexión' };
+    }
+
+    // Batch grande con TODOS los items
+    const items = cola.map(item => ({
+      ...item.datos,
+      id_local: item.id_local
+    }));
+
+    try {
+      const data = await API.request(config.endpoint, { items: items });
+
+      const exitososRaw = data.exitosos || [];
+      const idsOk = new Set();
+      exitososRaw.forEach(e => {
+        if (e && e.ok && e.id_local) idsOk.add(e.id_local);
+      });
+
+      const exitosos = idsOk.size;
+      const errores = cola.length - exitosos;
+
+      // Eliminar exitosos de la cola
+      const colaRestante = cola.filter(item => !idsOk.has(item.id_local));
+      this._escribirCola(tipo, colaRestante);
+      this._actualizarIndicador();
+
+      return { ok: errores === 0, total: cola.length, exitosos, errores };
+
+    } catch (err) {
+      console.error('[SYNC] enviarTodoAhora falló:', err.message);
+      return { ok: false, total: cola.length, exitosos: 0, errores: cola.length, error: err.message };
+    }
+  },
