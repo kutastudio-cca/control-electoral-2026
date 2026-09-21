@@ -19,13 +19,13 @@ const API = {
       payload.token = token;
     }
 
-    try {
-    const resp = await fetch(CONFIG.API_URL, {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-  body: 'data=' + encodeURIComponent(JSON.stringify(payload)),
-  redirect: 'follow'
-});
+        try {
+      const resp = await fetch(CONFIG.API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload),
+        redirect: 'follow'
+      });
 
       if (!resp.ok) {
         throw new Error('Error HTTP ' + resp.status);
