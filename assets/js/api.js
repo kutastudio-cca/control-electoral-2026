@@ -205,5 +205,22 @@ const API = {
   // ---------- AUDITORÍA ----------
   verAuditoria(limite = 50) {
     return this.request('verAuditoria', { limite });
+  },
+   
+     // ---------- BATCH ----------
+  registrarAsistenciasBatch(items) {
+    return this.request('registrarAsistenciasBatch', { items });
+  },
+
+  cargarVotosBatch(items) {
+    return this.request('cargarVotosBatch', { items });
+  },
+
+  registrarVocasBatch(items) {
+    return this.request('registrarVocasBatch', { items });
+  },
+
+  registrarPCsBatch(items) {
+    return this.request('registrarPCsBatch', { items });
   }
 };
