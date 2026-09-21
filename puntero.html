@@ -28,7 +28,7 @@
       border-radius: var(--radio-md);
       padding: var(--esp-3);
       cursor: pointer;
-      transition: all var(--trans);
+      transition: all 0.15s;
       text-align: center;
       display: flex;
       flex-direction: column;
@@ -40,6 +40,11 @@
       transform: scale(0.96);
       border-color: var(--rojo-600);
       background: var(--rojo-50);
+    }
+    .voto-btn.bloqueado {
+      opacity: 0.6;
+      pointer-events: none;
+      transform: scale(0.98);
     }
     .voto-btn.cruzado:hover  { border-color: var(--rojo-600); }
     .voto-btn.completo:hover { border-color: var(--exito); }
@@ -147,6 +152,10 @@
       gap: var(--esp-2);
       align-items: center;
     }
+    #sync-indicator button {
+      font-size: 11px;
+      padding: 4px 8px;
+    }
   </style>
 </head>
 <body>
@@ -173,9 +182,7 @@
         <button class="tab" data-tab="escrutinio">🗳️ Escrutinio</button>
       </div>
 
-      <!-- ============================================
-           TAB: ASISTENCIA
-           ============================================ -->
+      <!-- ASISTENCIA -->
       <section id="tab-asistencia" class="tab-content">
 
         <div class="card mb-4">
@@ -187,30 +194,22 @@
             <form id="form-asistencia">
 
               <div class="form-group">
-                <label class="form-label" for="asist-mesa">
-                  Número de mesa <span class="req">*</span>
-                </label>
+                <label class="form-label" for="asist-mesa">Número de mesa <span class="req">*</span></label>
                 <input type="text" id="asist-mesa" class="form-input" placeholder="Ej: 5" inputmode="numeric" required>
               </div>
 
               <div class="form-group">
-                <label class="form-label" for="asist-nombre">
-                  Nombre y apellido <span class="text-3">(opcional)</span>
-                </label>
+                <label class="form-label" for="asist-nombre">Nombre y apellido <span class="text-3">(opcional)</span></label>
                 <input type="text" id="asist-nombre" class="form-input" placeholder="Ej: Juan Pérez" autocapitalize="words">
               </div>
 
               <div class="form-group">
-                <label class="form-label" for="asist-dni">
-                  DNI <span class="text-3">(opcional)</span>
-                </label>
+                <label class="form-label" for="asist-dni">DNI <span class="text-3">(opcional)</span></label>
                 <input type="text" id="asist-dni" class="form-input" placeholder="Ej: 12345678" inputmode="numeric">
               </div>
 
               <div class="form-group">
-                <label class="form-label" for="asist-obs">
-                  Observaciones <span class="text-3">(opcional)</span>
-                </label>
+                <label class="form-label" for="asist-obs">Observaciones <span class="text-3">(opcional)</span></label>
                 <textarea id="asist-obs" class="form-textarea" placeholder="Ej: necesitaba transporte..." rows="2"></textarea>
               </div>
 
@@ -234,9 +233,7 @@
 
       </section>
 
-      <!-- ============================================
-           TAB: ESCRUTINIO
-           ============================================ -->
+      <!-- ESCRUTINIO -->
       <section id="tab-escrutinio" class="tab-content hidden">
 
         <div id="mesa-actual-box" class="hidden">
@@ -249,6 +246,10 @@
               </div>
               <button class="btn btn-danger btn-sm" id="btn-cerrar-mesa">Cerrar mesa</button>
             </div>
+          </div>
+
+          <div class="alert alert-info mb-4 text-sm" id="aviso-local">
+            💡 Los votos se guardan localmente. Se envían al <strong>cerrar la mesa</strong>.
           </div>
 
           <div class="voto-total-box">
@@ -351,12 +352,15 @@
       let escrutinioHabilitado = false;
       let mesaActual = null;
       let contadores = { COMPLETO: 0, CRUZADO: 0, BLANCO: 0, NULO: 0 };
-      let idsPendientesEscrutinio = []; // IDs locales de votos pendientes (para revertir si falla)
+      let botonBloqueado = false;
+      let idMesaLocal = null; // clave en localStorage para contadores de la mesa actual
 
       // ============================================================
-      // INICIAR SYNC (motor de batch)
+      // INICIAR SYNC (worker de asistencia)
       // ============================================================
       SYNC.iniciar();
+      actualizarIndicadorSync();
+      setInterval(actualizarIndicadorSync, 3000);
 
       // ============================================================
       // TABS
@@ -371,7 +375,34 @@
       });
 
       // ============================================================
-      // ESTADO DEL DÍA + ESCRUTINIO (usa cache)
+      // INDICADOR SYNC
+      // ============================================================
+      function actualizarIndicadorSync() {
+        const cont = document.getElementById('sync-indicator');
+        if (!cont) return;
+
+        const pendientes = SYNC.contarPendientes();
+        const online = navigator.onLine;
+
+        if (!online) {
+          cont.innerHTML = `<span class="badge badge-error">🔴 Sin conexión${pendientes.total > 0 ? ' · ' + pendientes.total : ''}</span>`;
+        } else if (pendientes.total === 0) {
+          cont.innerHTML = `<span class="badge badge-exito">🟢 Sincronizado</span>`;
+        } else {
+          cont.innerHTML = `<span class="badge badge-alerta">🟡 ${pendientes.total} pendiente${pendientes.total !== 1 ? 's' : ''}</span> <button class="btn btn-secondary" id="btn-sync-now">Sincronizar</button>`;
+          const btn = document.getElementById('btn-sync-now');
+          if (btn) btn.addEventListener('click', async () => {
+            btn.disabled = true;
+            btn.textContent = '...';
+            await SYNC.enviarTodoAhora('asistencia');
+            actualizarIndicadorSync();
+            cargarAsistencias();
+          });
+        }
+      }
+
+      // ============================================================
+      // ESTADO DEL DÍA + ESCRUTINIO
       // ============================================================
       async function verificarEstado() {
         try {
@@ -412,11 +443,14 @@
       }
 
       // ============================================================
-      // ASISTENCIA (con SYNC)
+      // ASISTENCIA
       // ============================================================
       document.getElementById('form-asistencia').addEventListener('submit', (e) => {
         e.preventDefault();
         if (estadoDia !== 'ABIERTO') { UI.toast('El día no está abierto', 'alerta'); return; }
+
+        const btn = document.getElementById('btn-asistencia');
+        if (btn.disabled) return; // evitar doble tap
 
         const mesa = document.getElementById('asist-mesa').value.trim();
         const nombre = document.getElementById('asist-nombre').value.trim();
@@ -425,9 +459,12 @@
 
         if (!mesa) { UI.toast('Ingresá el número de mesa', 'error'); return; }
 
-        // Encolar en SYNC (no espera al backend)
+        // Bloqueo temporal
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span> Guardando...';
+
         try {
-          const idLocal = SYNC.encolar('asistencia', {
+          SYNC.encolar('asistencia', {
             numero_mesa: mesa,
             nombre_persona: nombre,
             dni: dni,
@@ -436,25 +473,25 @@
 
           UI.toast('✅ Guardado localmente', 'exito', 1500);
 
-          // Limpiar form
           e.target.reset();
           document.getElementById('asist-mesa').focus();
-
-          // Actualizar lista local (optimistic UI)
           cargarAsistencias();
+          actualizarIndicadorSync();
 
         } catch (err) {
           UI.toast('Error al guardar: ' + err.message, 'error');
+        } finally {
+          setTimeout(() => {
+            btn.disabled = false;
+            btn.textContent = 'Registrar asistencia';
+          }, 300);
         }
       });
 
       async function cargarAsistencias() {
         const cont = document.getElementById('lista-asistencias');
         try {
-          // Asistencias confirmadas del backend
           const confirmadas = await API.misAsistencias();
-
-          // Asistencias pendientes en la cola
           const cola = SYNC._leerCola('asistencia');
           const pendientes = cola.map(c => ({
             id_asistencia: c.id_local,
@@ -497,11 +534,13 @@
       document.getElementById('btn-refresh-asist').addEventListener('click', cargarAsistencias);
 
       // ============================================================
-      // ESCRUTINIO: ABRIR MESA
+      // ESCRUTINIO: ABRIR MESA (online)
       // ============================================================
       document.getElementById('form-abrir-mesa').addEventListener('submit', async (e) => {
         e.preventDefault();
         const btn = document.getElementById('btn-abrir-mesa');
+        if (btn.disabled) return;
+
         const numero = document.getElementById('mesa-numero').value.trim();
         if (!numero) { UI.toast('Ingresá el número', 'error'); return; }
 
@@ -509,8 +548,10 @@
         btn.innerHTML = '<span class="spinner"></span> Abriendo...';
 
         try {
-          await API.abrirMesa(usuario.id_escuela, numero);
+          const res = await API.abrirMesa(usuario.id_escuela, numero);
           UI.toast('✅ Mesa abierta', 'exito');
+          mesaActual = { id_apertura: res.id_apertura, numero_mesa: numero, hora_apertura: new Date().toISOString() };
+          cargarContadoresDeMesa();
           await cargarMesasAbiertas();
         } catch (err) {
           UI.toast(err.message || 'Error', 'error');
@@ -521,101 +562,34 @@
       });
 
       // ============================================================
-      // ESCRUTINIO: CERRAR MESA
+      // ESCRUTINIO: CONTADORES LOCALES (persistentes por mesa)
       // ============================================================
-      document.getElementById('btn-cerrar-mesa').addEventListener('click', async () => {
-        if (!mesaActual) return;
-
-        // Si hay votos pendientes, esperar a que se sincronicen
-        const pendientes = SYNC._leerCola('escrutinio');
-        if (pendientes.length > 0) {
-          if (!confirm(`Tenés ${pendientes.length} votos pendientes de sincronizar.\n\nSe van a enviar ahora antes de cerrar. ¿Continuar?`)) return;
-          UI.loader(true, 'Sincronizando votos pendientes...');
-          await SYNC._syncAhora('escrutinio');
-          await new Promise(r => setTimeout(r, 800));
-          UI.loader(false);
-
-          const aunPendientes = SYNC._leerCola('escrutinio');
-          if (aunPendientes.length > 0) {
-            UI.toast('No se pudieron sincronizar todos. Reintentá en unos segundos.', 'error', 6000);
-            return;
-          }
-        }
-
-        if (!confirm('¿Cerrar la mesa ' + mesaActual.numero_mesa + '? No vas a poder cargar más votos.')) return;
-
-        try {
-          await API.cerrarMesa(mesaActual.id_apertura);
-          UI.toast('✅ Mesa cerrada', 'exito');
-          mesaActual = null;
-          contadores = { COMPLETO: 0, CRUZADO: 0, BLANCO: 0, NULO: 0 };
-          await cargarMesasAbiertas();
-        } catch (err) {
-          UI.toast(err.message || 'Error', 'error');
-        }
-      });
-
-      // ============================================================
-      // ESCRUTINIO: CARGAR MESAS
-      // ============================================================
-      async function cargarMesasAbiertas() {
-        try {
-          const mesas = await API.mesasAbiertas();
-          mesaActual = mesas.find(m => m.id_usuario_apertura === usuario.id_usuario) || null;
-
-          const boxActual = document.getElementById('mesa-actual-box');
-          const boxAbrir = document.getElementById('abrir-mesa-box');
-
-          if (mesaActual) {
-            boxActual.classList.remove('hidden');
-            boxAbrir.classList.add('hidden');
-            document.getElementById('mesa-actual-info').textContent =
-              'Mesa ' + mesaActual.numero_mesa + ' · ' + UTILS.formatearHora(mesaActual.hora_apertura);
-            await cargarContadores();
-          } else {
-            boxActual.classList.add('hidden');
-            boxAbrir.classList.remove('hidden');
-          }
-          actualizarEscrutinioUI();
-        } catch (err) {
-          console.error(err);
-        }
+      function claveContadores(idApertura) {
+        return 'dia_contadores_' + idApertura;
       }
 
-      // ============================================================
-      // ESCRUTINIO: CARGAR CONTADORES (backend + pendientes locales)
-      // ============================================================
-            async function cargarContadores() {
+      function cargarContadoresDeMesa() {
         if (!mesaActual) return;
         try {
-          const data = await API.request('contadoresMesa', { id_apertura: mesaActual.id_apertura });
-
-          // Contadores confirmados del backend
-          const confirmados = data.contadores || { COMPLETO: 0, CRUZADO: 0, BLANCO: 0, NULO: 0 };
-
-          // Contadores locales de la cola (pendientes)
-          const pendientes = { COMPLETO: 0, CRUZADO: 0, BLANCO: 0, NULO: 0 };
-          const cola = SYNC._leerCola('escrutinio')
-            .filter(c => c.datos.id_apertura === mesaActual.id_apertura);
-          cola.forEach(c => {
-            const cat = c.datos.categoria;
-            if (pendientes[cat] !== undefined) {
-              pendientes[cat] += Number(c.datos.cantidad || 1);
-            }
-          });
-
-          // Total = confirmados + pendientes (recalculado limpio cada vez)
-          contadores = {
-            COMPLETO: (confirmados.COMPLETO || 0) + pendientes.COMPLETO,
-            CRUZADO:  (confirmados.CRUZADO  || 0) + pendientes.CRUZADO,
-            BLANCO:   (confirmados.BLANCO   || 0) + pendientes.BLANCO,
-            NULO:     (confirmados.NULO     || 0) + pendientes.NULO
-          };
-
-          renderContadores();
-        } catch (err) {
-          console.error(err);
+          const raw = localStorage.getItem(claveContadores(mesaActual.id_apertura));
+          contadores = raw ? JSON.parse(raw) : { COMPLETO: 0, CRUZADO: 0, BLANCO: 0, NULO: 0 };
+        } catch (e) {
+          contadores = { COMPLETO: 0, CRUZADO: 0, BLANCO: 0, NULO: 0 };
         }
+        renderContadores();
+      }
+
+      function guardarContadoresDeMesa() {
+        if (!mesaActual) return;
+        try {
+          localStorage.setItem(claveContadores(mesaActual.id_apertura), JSON.stringify(contadores));
+        } catch (e) {}
+      }
+
+      function limpiarContadoresDeMesa(idApertura) {
+        try {
+          localStorage.removeItem(claveContadores(idApertura));
+        } catch (e) {}
       }
 
       function renderContadores() {
@@ -627,34 +601,45 @@
       }
 
       // ============================================================
-      // ESCRUTINIO: TAP EN BOTÓN (con SYNC)
+      // ESCRUTINIO: TAP (100% local)
       // ============================================================
       document.querySelectorAll('.voto-btn').forEach(btn => {
-        btn.addEventListener('click', () => registrarTap(btn.dataset.categoria));
+        btn.addEventListener('click', () => registrarTap(btn, btn.dataset.categoria));
       });
 
-      function registrarTap(categoria) {
+      function registrarTap(btnElemento, categoria) {
         if (!mesaActual) { UI.toast('No hay mesa abierta', 'error'); return; }
         if (!escrutinioHabilitado) { UI.toast('Escrutinio no habilitado', 'alerta'); return; }
+        if (botonBloqueado) return;
 
-        // Encolar en SYNC (local, instantáneo)
+        // Bloqueo temporal de 300ms para evitar doble tap
+        botonBloqueado = true;
+        btnElemento.classList.add('bloqueado');
+
         try {
-          const idLocal = SYNC.encolar('escrutinio', {
+          // Encolar
+          SYNC.encolar('escrutinio', {
             id_apertura: mesaActual.id_apertura,
             categoria: categoria,
             cantidad: 1
           });
 
-          // Actualizar contador local (optimistic)
+          // Actualizar contador local
           contadores[categoria] = (contadores[categoria] || 0) + 1;
           renderContadores();
+          guardarContadoresDeMesa();
 
-          // Feedback visual + vibración
+          // Feedback
           mostrarFeedback(categoria);
           if (navigator.vibrate) navigator.vibrate(30);
 
         } catch (err) {
           UI.toast('Error: ' + err.message, 'error');
+        } finally {
+          setTimeout(() => {
+            botonBloqueado = false;
+            btnElemento.classList.remove('bloqueado');
+          }, 300);
         }
       }
 
@@ -669,6 +654,98 @@
       }
 
       // ============================================================
+      // ESCRUTINIO: CERRAR MESA (con batch de votos)
+      // ============================================================
+      document.getElementById('btn-cerrar-mesa').addEventListener('click', async () => {
+        if (!mesaActual) return;
+
+        // Ver cola local
+        const cola = SYNC._leerCola('escrutinio').filter(c => c.datos.id_apertura === mesaActual.id_apertura);
+        const totalVotos = cola.length;
+
+        if (totalVotos === 0) {
+          if (!confirm(`Mesa ${mesaActual.numero_mesa} sin votos cargados.\n\n¿Cerrar igual?`)) return;
+        } else {
+          if (!confirm(`¿Cerrar mesa ${mesaActual.numero_mesa} con ${totalVotos} votos?\n\nSe van a enviar al servidor.`)) return;
+        }
+
+        // Bloquear el botón
+        const btnCerrar = document.getElementById('btn-cerrar-mesa');
+        btnCerrar.disabled = true;
+        btnCerrar.innerHTML = '<span class="spinner"></span> Cerrando...';
+
+        UI.loader(true, `Enviando ${totalVotos} votos...`);
+
+        try {
+          // Extraer solo los datos de los votos de esta mesa
+          const votos = cola.map(c => ({
+            categoria: c.datos.categoria,
+            cantidad: c.datos.cantidad || 1
+          }));
+
+          // Enviar todo junto al backend
+          const res = await API.cerrarMesaConVotos(mesaActual.id_apertura, votos);
+
+          // Si llegamos acá, el backend confirmó
+          // 1. Limpiar la cola de esos votos
+          const colaCompleta = SYNC._leerCola('escrutinio');
+          const idsEstaMesa = new Set(cola.map(c => c.id_local));
+          const colaRestante = colaCompleta.filter(c => !idsEstaMesa.has(c.id_local));
+          SYNC._escribirCola('escrutinio', colaRestante);
+
+          // 2. Limpiar contadores locales de esta mesa
+          limpiarContadoresDeMesa(mesaActual.id_apertura);
+
+          // 3. Resetear estado
+          UI.toast(`✅ Mesa cerrada · ${res.votos_insertados || votos.length} votos enviados`, 'exito', 4000);
+
+          mesaActual = null;
+          contadores = { COMPLETO: 0, CRUZADO: 0, BLANCO: 0, NULO: 0 };
+          await cargarMesasAbiertas();
+          actualizarIndicadorSync();
+
+        } catch (err) {
+          UI.toast('❌ No se pudo cerrar: ' + (err.message || 'Error'), 'error', 6000);
+          // La mesa queda abierta, los votos siguen en la cola local
+        } finally {
+          UI.loader(false);
+          btnCerrar.disabled = false;
+          btnCerrar.textContent = 'Cerrar mesa';
+        }
+      });
+
+      // ============================================================
+      // CARGAR MESAS ABIERTAS (verificar cuál es del usuario)
+      // ============================================================
+      async function cargarMesasAbiertas() {
+        try {
+          const mesas = await API.mesasAbiertas();
+          const miMesa = mesas.find(m => m.id_usuario_apertura === usuario.id_usuario);
+
+          const boxActual = document.getElementById('mesa-actual-box');
+          const boxAbrir = document.getElementById('abrir-mesa-box');
+
+          if (miMesa) {
+            mesaActual = miMesa;
+            boxActual.classList.remove('hidden');
+            boxAbrir.classList.add('hidden');
+            document.getElementById('mesa-actual-info').textContent =
+              'Mesa ' + miMesa.numero_mesa + ' · ' + UTILS.formatearHora(miMesa.hora_apertura);
+
+            // Cargar contadores persistentes (por si se recargó la página)
+            cargarContadoresDeMesa();
+          } else {
+            mesaActual = null;
+            boxActual.classList.add('hidden');
+            boxAbrir.classList.remove('hidden');
+          }
+          actualizarEscrutinioUI();
+        } catch (err) {
+          console.error(err);
+        }
+      }
+
+      // ============================================================
       // INICIALIZAR
       // ============================================================
       await verificarEstado();
@@ -676,14 +753,7 @@
       await cargarMesasAbiertas();
 
       setInterval(verificarEstado, 30000);
-
-      // Actualizar la lista de asistencias cada 20s (para ver los confirmados)
       setInterval(cargarAsistencias, 20000);
-
-      // Actualizar contadores del escrutinio cada 15s (por si hay otros usuarios)
-      setInterval(() => {
-        if (mesaActual) cargarContadores();
-      }, 15000);
 
     })();
   </script>
