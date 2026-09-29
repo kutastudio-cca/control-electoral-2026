@@ -14,7 +14,7 @@
 </head>
 <body>
 
-    <header class="header">
+  <header class="header">
     <div class="container header-inner">
       <div class="header-logo" id="header-logo"></div>
       <div class="header-user">
@@ -110,7 +110,7 @@
     </div>
   </main>
 
-    <script src="assets/js/config.js"></script>
+  <script src="assets/js/config.js"></script>
   <script src="assets/js/utils.js"></script>
   <script src="assets/js/cache.js"></script>
   <script src="assets/js/api.js"></script>
@@ -125,13 +125,18 @@
 
       AUTH.renderHeaderLogo();
       AUTH.renderHeaderUsuario(usuario);
+
+      // ⭐ Iniciar SYNC
       SYNC.iniciar();
       setInterval(() => SYNC._actualizarIndicadores(), 2000);
 
       let estadoDia = 'CERRADO';
       let escuelas = [];
+      let botonBloqueado = false;
 
-      // ---------- ESTADO DEL DÍA ----------
+      // ============================================================
+      // ESTADO DEL DÍA
+      // ============================================================
       async function verificarEstadoDia() {
         try {
           const data = await API.estadoDia();
@@ -148,10 +153,12 @@
         } catch (e) { console.error(e); }
       }
 
-      // ---------- CARGAR COLEGIOS ----------
+      // ============================================================
+      // CARGAR COLEGIOS (usa cache)
+      // ============================================================
       async function cargarEscuelas() {
         try {
-          escuelas = await API.listarEscuelas();
+          escuelas = await DATA.escuelas();
           const sel = document.getElementById('pc-colegio');
           sel.innerHTML = '<option value="">— Seleccionar —</option>';
           escuelas.forEach(e => {
@@ -163,10 +170,13 @@
         } catch (e) { console.error(e); }
       }
 
-      // ---------- REGISTRAR ----------
-      document.getElementById('form-pc').addEventListener('submit', async (e) => {
+      // ============================================================
+      // REGISTRAR (con SYNC)
+      // ============================================================
+      document.getElementById('form-pc').addEventListener('submit', (e) => {
         e.preventDefault();
         if (estadoDia !== 'ABIERTO') { UI.toast('El día no está abierto', 'alerta'); return; }
+        if (botonBloqueado) return;
 
         const btn = document.getElementById('btn-pc');
         const nombre = document.getElementById('pc-nombre').value.trim();
@@ -181,14 +191,22 @@
           return;
         }
 
+        // Bloqueo temporal
+        botonBloqueado = true;
         btn.disabled = true;
         btn.innerHTML = '<span class="spinner"></span> Guardando...';
 
         try {
-          await API.request('registrarPC', {
-            nombre, apellido, dni, colegio, mesa, observaciones: obs
+          SYNC.encolar('pc', {
+            nombre: nombre,
+            apellido: apellido,
+            dni: dni,
+            colegio: colegio,
+            mesa: mesa,
+            observaciones: obs
           });
-          UI.toast('✅ Persona registrada', 'exito');
+
+          UI.toast('✅ Guardado localmente', 'exito', 1500);
 
           // Limpiar solo nombre, apellido, dni, obs (mantener colegio y mesa)
           document.getElementById('pc-nombre').value = '';
@@ -198,41 +216,64 @@
           document.getElementById('pc-nombre').focus();
 
           cargarRegistros();
+
         } catch (err) {
-          UI.toast(err.message || 'Error', 'error');
+          UI.toast('Error al guardar: ' + err.message, 'error');
         } finally {
-          btn.disabled = false;
-          btn.textContent = 'Registrar persona';
+          setTimeout(() => {
+            botonBloqueado = false;
+            btn.disabled = false;
+            btn.textContent = 'Registrar persona';
+          }, 300);
         }
       });
 
-      // ---------- LISTAR MIS REGISTROS ----------
+      // ============================================================
+      // CARGAR REGISTROS (backend + cola local)
+      // ============================================================
       async function cargarRegistros() {
         const cont = document.getElementById('lista-pc');
         try {
-          const registros = await API.request('misRegistrosPC');
-          document.getElementById('contador-hoy').textContent = registros.length + ' hoy';
+          // Registros confirmados en el backend
+          const confirmados = await API.request('misRegistrosPC');
 
-          if (registros.length === 0) {
+          // Registros pendientes en la cola local
+          const cola = SYNC._leerCola('pc');
+          const pendientes = cola.map(c => ({
+            id_pc: c.id_local,
+            nombre: c.datos.nombre,
+            apellido: c.datos.apellido,
+            dni: c.datos.dni,
+            colegio: c.datos.colegio,
+            mesa: c.datos.mesa,
+            hora_registro: c.timestamp,
+            estado: 'PENDIENTE'
+          }));
+
+          const todos = [...confirmados, ...pendientes];
+          document.getElementById('contador-hoy').textContent = todos.length + ' hoy';
+
+          if (todos.length === 0) {
             cont.innerHTML = '<p class="text-2 text-center">Sin registros aún</p>';
             return;
           }
 
-          const ultimos = registros.slice(-20).reverse();
+          const ultimos = todos.slice(-20).reverse();
           cont.innerHTML = ultimos.map(r => {
             const esc = escuelas.find(e => e.id_escuela === r.colegio);
+            const escNombre = esc ? esc.nombre : r.colegio;
             return `
               <div class="flex-between" style="padding: 10px 0; border-bottom: 1px solid var(--borde-2);">
                 <div>
                   <div class="font-semibold">${UTILS.escaparHTML(r.apellido)}, ${UTILS.escaparHTML(r.nombre)}</div>
                   <div class="text-xs text-2">
-                    ${esc ? UTILS.escaparHTML(esc.nombre) : UTILS.escaparHTML(r.colegio)}
+                    ${UTILS.escaparHTML(escNombre)}
                     ${r.mesa ? ' · Mesa ' + UTILS.escaparHTML(r.mesa) : ''}
                     ${r.dni ? ' · DNI ' + UTILS.escaparHTML(r.dni) : ''}
                     · ${UTILS.formatearHora(r.hora_registro)}
+                    ${r.estado === 'PENDIENTE' ? ' · <span class="badge badge-alerta">⏳ Sync</span>' : ' · <span class="badge badge-exito">✅</span>'}
                   </div>
                 </div>
-                <span class="badge badge-exito">✓</span>
               </div>
             `;
           }).join('');
@@ -243,12 +284,16 @@
 
       document.getElementById('btn-refresh').addEventListener('click', cargarRegistros);
 
-      // ---------- INICIALIZAR ----------
+      // ============================================================
+      // INICIALIZAR
+      // ============================================================
       await verificarEstadoDia();
       await cargarEscuelas();
       await cargarRegistros();
 
       setInterval(verificarEstadoDia, 30000);
+      setInterval(cargarRegistros, 10000);
+
     })();
   </script>
 
