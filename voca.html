@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#D32F2F">
-  <title>Boca de Urna — Control Electoral 2026</title>
+  <title>Voca de Urna — Control Electoral 2026</title>
 
   <link rel="icon" type="image/png" href="assets/img/logo-lista1.png">
   <link rel="stylesheet" href="assets/css/base.css">
@@ -13,18 +13,15 @@
   <link rel="stylesheet" href="assets/css/dashboard.css">
 
   <style>
-    /* ---------- VOTING CARDS ---------- */
     .candidato-grid {
       display: grid;
       grid-template-columns: 1fr;
       gap: var(--esp-2);
       margin-top: var(--esp-3);
     }
-
     @media (min-width: 640px) {
       .candidato-grid { grid-template-columns: repeat(2, 1fr); }
     }
-
     .candidato-card {
       display: flex;
       align-items: center;
@@ -38,25 +35,21 @@
       text-align: left;
       width: 100%;
     }
-
     .candidato-card:hover {
       border-color: var(--texto-3);
       transform: translateY(-1px);
       box-shadow: var(--sombra-sm);
     }
-
     .candidato-card.seleccionado {
       border-color: var(--rojo-600);
       background: var(--rojo-50);
       box-shadow: 0 0 0 3px var(--rojo-200);
     }
-
     .candidato-card.seleccionado.amarillo {
       border-color: var(--amarillo-600);
       background: var(--amarillo-50);
       box-shadow: 0 0 0 3px var(--amarillo-200);
     }
-
     .candidato-foto {
       width: 52px;
       height: 52px;
@@ -66,19 +59,13 @@
       border: 2px solid var(--borde-2);
       background: var(--fondo);
     }
-
     .candidato-card.seleccionado .candidato-foto {
       border-color: var(--rojo-600);
     }
     .candidato-card.seleccionado.amarillo .candidato-foto {
       border-color: var(--amarillo-600);
     }
-
-    .candidato-info {
-      flex: 1;
-      min-width: 0;
-    }
-
+    .candidato-info { flex: 1; min-width: 0; }
     .candidato-nombre {
       font-weight: 700;
       font-size: 14px;
@@ -86,17 +73,14 @@
       line-height: 1.2;
       margin-bottom: 2px;
     }
-
     .candidato-lista {
       font-size: 11px;
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.3px;
     }
-
     .candidato-lista.rojo     { color: var(--rojo-600); }
     .candidato-lista.amarillo { color: var(--amarillo-800); }
-
     .seccion-titulo {
       display: flex;
       align-items: center;
@@ -111,7 +95,25 @@
       padding-bottom: var(--esp-2);
       border-bottom: 2px solid var(--borde-2);
     }
-
+    .seccion-titulo.seccion-lista1 {
+      color: var(--rojo-600);
+      border-bottom-color: var(--rojo-600);
+    }
+    .seccion-titulo.seccion-lista20 {
+      color: var(--amarillo-800);
+      border-bottom-color: var(--amarillo-600);
+    }
+    .dot-list1, .dot-list20 {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: 6px;
+    }
+    .dot-list1  { background: var(--rojo-600); }
+    .dot-list20 { background: var(--amarillo-600); }
+    #grid-concejales-l1  { padding: var(--esp-2); background: var(--rojo-50);     border-radius: var(--radio); }
+    #grid-concejales-l20 { padding: var(--esp-2); background: var(--amarillo-50); border-radius: var(--radio); }
     .resumen-voca {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -121,11 +123,7 @@
       border-radius: var(--radio);
       margin-bottom: var(--esp-4);
     }
-
-    .resumen-item {
-      text-align: center;
-    }
-
+    .resumen-item { text-align: center; }
     .resumen-label {
       font-size: 11px;
       font-weight: 600;
@@ -133,42 +131,17 @@
       color: var(--texto-3);
       margin-bottom: 2px;
     }
-
     .resumen-valor {
       font-size: 14px;
       font-weight: 700;
       color: var(--texto);
       line-height: 1.2;
     }
-        /* Colores de las secciones */
-    .seccion-titulo.seccion-lista1 {
-      color: var(--rojo-600);
-      border-bottom-color: var(--rojo-600);
-    }
-    .seccion-titulo.seccion-lista20 {
-      color: var(--amarillo-800);
-      border-bottom-color: var(--amarillo-600);
-    }
-
-    .dot-list1,
-    .dot-list20 {
-      display: inline-block;
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      margin-right: 6px;
-    }
-    .dot-list1  { background: var(--rojo-600); }
-    .dot-list20 { background: var(--amarillo-600); }
-
-    /* Fondo suave para la sección de cada lista */
-    #grid-concejales-l1  { padding: var(--esp-2); background: var(--rojo-50);     border-radius: var(--radio); }
-    #grid-concejales-l20 { padding: var(--esp-2); background: var(--amarillo-50); border-radius: var(--radio); }
   </style>
 </head>
 <body>
 
-    <header class="header">
+  <header class="header">
     <div class="container header-inner">
       <div class="header-logo" id="header-logo"></div>
       <div class="header-user">
@@ -187,7 +160,7 @@
 
       <div class="card mb-4">
         <div class="card-header">
-          <h2 class="card-title">Registrar boca de urna</h2>
+          <h2 class="card-title">Registrar voca de urna</h2>
           <span class="badge badge-rojo" id="contador-hoy">0 hoy</span>
         </div>
         <div class="card-body">
@@ -196,7 +169,6 @@
             Tocá el candidato que la persona te indica. Podés elegir solo Intendente, solo Concejal, o ambos.
           </p>
 
-          <!-- Resumen de lo elegido -->
           <div class="resumen-voca">
             <div class="resumen-item">
               <div class="resumen-label">Intendente</div>
@@ -208,13 +180,11 @@
             </div>
           </div>
 
-          <!-- INTENDENTES -->
           <div class="seccion-titulo">🎯 Intendente</div>
           <div class="candidato-grid" id="grid-intendentes">
             <p class="text-2 text-center">Cargando...</p>
           </div>
 
-                 <!-- CONCEJALES LISTA 1 -->
           <div class="seccion-titulo seccion-lista1">
             <span class="dot-list1"></span>
             Concejal · Lista 1 — ANR
@@ -223,7 +193,6 @@
             <p class="text-2 text-center">Cargando...</p>
           </div>
 
-          <!-- CONCEJALES LISTA 20 -->
           <div class="seccion-titulo seccion-lista20">
             <span class="dot-list20"></span>
             Concejal · Lista 20 — Alianza
@@ -237,7 +206,7 @@
               Limpiar
             </button>
             <button type="button" class="btn btn-primary btn-lg w-full" id="btn-guardar">
-              Guardar Boca
+              Guardar voca
             </button>
           </div>
 
@@ -246,7 +215,7 @@
 
       <div class="card">
         <div class="card-header">
-          <h2 class="card-title">Últimas bocas cargadas</h2>
+          <h2 class="card-title">Últimas vocas cargadas</h2>
           <button class="btn btn-ghost btn-sm" id="btn-refresh">🔄</button>
         </div>
         <div class="card-body" id="lista-vocas">
@@ -257,7 +226,7 @@
     </div>
   </main>
 
-    <script src="assets/js/config.js"></script>
+  <script src="assets/js/config.js"></script>
   <script src="assets/js/utils.js"></script>
   <script src="assets/js/cache.js"></script>
   <script src="assets/js/api.js"></script>
@@ -272,15 +241,21 @@
 
       AUTH.renderHeaderLogo();
       AUTH.renderHeaderUsuario(usuario);
+
+      // ⭐ Iniciar SYNC
       SYNC.iniciar();
       setInterval(() => SYNC._actualizarIndicadores(), 2000);
 
       let estadoDia = 'CERRADO';
       let intendentes = [];
-      let concejales = [];
+      let concejalesL1 = [];
+      let concejalesL20 = [];
       let seleccion = { intendente: null, concejal: null };
+      let botonBloqueado = false;
 
-      // ---------- ESTADO DEL DÍA ----------
+      // ============================================================
+      // ESTADO DEL DÍA
+      // ============================================================
       async function verificarEstadoDia() {
         try {
           const data = await API.estadoDia();
@@ -297,25 +272,22 @@
         } catch (e) { console.error(e); }
       }
 
-      // ---------- CARGAR LISTAS ----------
-            async function cargarListas() {
+      // ============================================================
+      // CARGAR LISTAS (usa cache)
+      // ============================================================
+      async function cargarListas() {
         try {
-          const todas = await API.listarListas();
+          const todas = await DATA.listas();
           intendentes = todas.filter(l => l.categoria === 'INTENDENTE').sort((a,b) => a.orden - b.orden);
+          concejalesL1 = todas.filter(l => l.categoria === 'CONCEJAL' && l.color === 'rojo').sort((a,b) => a.orden - b.orden);
+          concejalesL20 = todas.filter(l => l.categoria === 'CONCEJAL' && l.color === 'amarillo').sort((a,b) => a.orden - b.orden);
 
-          const concejalesL1  = todas
-            .filter(l => l.categoria === 'CONCEJAL' && l.color === 'rojo')
-            .sort((a,b) => a.orden - b.orden);
-
-          const concejalesL20 = todas
-            .filter(l => l.categoria === 'CONCEJAL' && l.color === 'amarillo')
-            .sort((a,b) => a.orden - b.orden);
-
-          renderGrid('grid-intendentes',    intendentes,    'intendente');
-          renderGrid('grid-concejales-l1',  concejalesL1,   'concejal');
-          renderGrid('grid-concejales-l20', concejalesL20,  'concejal');
+          renderGrid('grid-intendentes', intendentes, 'intendente');
+          renderGrid('grid-concejales-l1', concejalesL1, 'concejal');
+          renderGrid('grid-concejales-l20', concejalesL20, 'concejal');
         } catch (e) { console.error(e); }
       }
+
       function renderGrid(containerId, items, tipo) {
         const cont = document.getElementById(containerId);
         if (items.length === 0) {
@@ -334,11 +306,7 @@
               data-nombre="${UTILS.escaparHTML(c.nombre_candidato)}"
               data-lista="${UTILS.escaparHTML(c.nombre_lista)}"
               data-color="${color}">
-              <img
-                src="${foto}"
-                alt="${UTILS.escaparHTML(c.nombre_candidato)}"
-                class="candidato-foto"
-                onerror="this.src='assets/img/concejal-lista1.png'">
+              <img src="${foto}" alt="${UTILS.escaparHTML(c.nombre_candidato)}" class="candidato-foto" onerror="this.src='assets/img/concejal-lista1.png'">
               <div class="candidato-info">
                 <div class="candidato-nombre">${UTILS.escaparHTML(c.nombre_candidato)}</div>
                 <div class="candidato-lista ${color}">${UTILS.escaparHTML(c.nombre_lista)}</div>
@@ -347,70 +315,75 @@
           `;
         }).join('');
 
-        // Listener de selección
         cont.querySelectorAll('.candidato-card').forEach(card => {
           card.addEventListener('click', () => seleccionar(card, tipo));
         });
       }
 
       function seleccionar(card, tipo) {
-               // Detectar en qué contenedor está la card clickeada
         const container = card.closest('.candidato-grid');
-
-        // Quitar selección previa
         container.querySelectorAll('.candidato-card').forEach(c => c.classList.remove('seleccionado'));
 
-        // Marcar seleccionado
         card.classList.add('seleccionado');
         if (card.dataset.color === 'amarillo') card.classList.add('amarillo');
 
-        // Guardar selección
         seleccion[tipo] = {
           lista: card.dataset.lista,
           candidato: card.dataset.nombre,
           id: card.dataset.id
         };
 
-        // Actualizar resumen
         document.getElementById('resumen-' + (tipo === 'intendente' ? 'int' : 'con')).textContent =
           card.dataset.nombre;
       }
 
-      // ---------- GUARDAR VOCA ----------
-      document.getElementById('btn-guardar').addEventListener('click', async () => {
+      // ============================================================
+      // GUARDAR VOCA (con SYNC)
+      // ============================================================
+      document.getElementById('btn-guardar').addEventListener('click', () => {
         if (estadoDia !== 'ABIERTO') {
           UI.toast('El día no está abierto', 'alerta');
           return;
         }
+
+        if (botonBloqueado) return;
 
         if (!seleccion.intendente && !seleccion.concejal) {
           UI.toast('Elegí al menos un candidato', 'error');
           return;
         }
 
+        // Bloqueo temporal
+        botonBloqueado = true;
         const btn = document.getElementById('btn-guardar');
         btn.disabled = true;
-        btn.innerHTML = '<span class="spinner"></span> Guardando...';
 
         try {
-          await API.registrarVoca({
+          // Encolar en SYNC (no espera al backend)
+          SYNC.encolar('voca', {
             intendente_lista: seleccion.intendente ? seleccion.intendente.lista : '',
             intendente_candidato: seleccion.intendente ? seleccion.intendente.candidato : '',
             concejal_lista: seleccion.concejal ? seleccion.concejal.lista : '',
             concejal_candidato: seleccion.concejal ? seleccion.concejal.candidato : ''
           });
-          UI.toast('✅ Voca registrada', 'exito');
+
+          UI.toast('✅ Guardado localmente', 'exito', 1500);
           limpiar();
           cargarMisVocas();
+
         } catch (err) {
-          UI.toast(err.message || 'Error', 'error');
+          UI.toast('Error al guardar: ' + err.message, 'error');
         } finally {
-          btn.disabled = false;
-          btn.textContent = 'Guardar voca';
+          setTimeout(() => {
+            botonBloqueado = false;
+            btn.disabled = false;
+          }, 300);
         }
       });
 
-      // ---------- LIMPIAR ----------
+      // ============================================================
+      // LIMPIAR
+      // ============================================================
       document.getElementById('btn-limpiar').addEventListener('click', limpiar);
 
       function limpiar() {
@@ -423,23 +396,45 @@
         document.getElementById('resumen-con').textContent = '—';
       }
 
-      // ---------- MIS VOCAS ----------
+      // ============================================================
+      // MIS VOCAS (backend + cola local)
+      // ============================================================
       async function cargarMisVocas() {
         const cont = document.getElementById('lista-vocas');
         try {
-          const vocas = await API.misVocas();
-          document.getElementById('contador-hoy').textContent = vocas.length + ' hoy';
+          // Vocas confirmadas en el backend
+          const confirmadas = await API.misVocas();
 
-          if (vocas.length === 0) {
+          // Vocas pendientes en la cola local
+          const cola = SYNC._leerCola('voca');
+          const pendientes = cola.map(c => ({
+            id_voca: c.id_local,
+            intendente_lista: c.datos.intendente_lista,
+            intendente_candidato: c.datos.intendente_candidato,
+            concejal_lista: c.datos.concejal_lista,
+            concejal_candidato: c.datos.concejal_candidato,
+            hora_registro: c.timestamp,
+            estado: 'PENDIENTE'
+          }));
+
+          const todas = [...confirmadas, ...pendientes];
+          document.getElementById('contador-hoy').textContent = todas.length + ' hoy';
+
+          if (todas.length === 0) {
             cont.innerHTML = '<p class="text-2 text-center">Sin vocas registradas</p>';
             return;
           }
 
-          const ultimas = vocas.slice(-20).reverse();
+          const ultimas = todas.slice(-20).reverse();
           cont.innerHTML = ultimas.map(v => `
             <div style="padding: 10px 0; border-bottom: 1px solid var(--borde-2);">
-              <div class="text-xs text-2">${UTILS.formatearHora(v.hora_registro)}</div>
-              <div class="text-sm">
+              <div class="flex-between">
+                <div class="text-xs text-2">${UTILS.formatearHora(v.hora_registro)}</div>
+                ${v.estado === 'PENDIENTE'
+                  ? '<span class="badge badge-alerta">⏳ Sync</span>'
+                  : '<span class="badge badge-exito">✅</span>'}
+              </div>
+              <div class="text-sm mt-1">
                 <strong>Intendente:</strong> ${UTILS.escaparHTML(v.intendente_candidato || '—')}
                 <span class="text-3">(${UTILS.escaparHTML(v.intendente_lista || '—')})</span><br>
                 <strong>Concejal:</strong> ${UTILS.escaparHTML(v.concejal_candidato || '—')}
@@ -454,12 +449,15 @@
 
       document.getElementById('btn-refresh').addEventListener('click', cargarMisVocas);
 
-      // ---------- INICIALIZAR ----------
+      // ============================================================
+      // INICIALIZAR
+      // ============================================================
       await verificarEstadoDia();
       await cargarListas();
       await cargarMisVocas();
 
       setInterval(verificarEstadoDia, 30000);
+      setInterval(cargarMisVocas, 10000); // Cada 10 seg actualizar lista (para ver confirmados)
 
     })();
   </script>
