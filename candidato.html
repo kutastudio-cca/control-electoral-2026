@@ -7,11 +7,10 @@
   <title>Candidato — Control Electoral 2026</title>
 
   <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#D32F2F">
   <link rel="apple-touch-icon" href="assets/img/icon-192.png">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Control Electoral">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Control Electoral">
 
   <link rel="icon" type="image/png" href="assets/img/logo-lista1.png">
   <link rel="stylesheet" href="assets/css/base.css">
@@ -19,13 +18,83 @@
   <link rel="stylesheet" href="assets/css/layout.css">
   <link rel="stylesheet" href="assets/css/dashboard.css">
 
-  <!-- jsPDF para exportación PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
+
+  <style>
+    .gasto-tipo-card {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--esp-2);
+      margin-bottom: var(--esp-3);
+    }
+    @media (max-width: 480px) {
+      .gasto-tipo-card { grid-template-columns: 1fr; }
+    }
+    .gasto-tipo-btn {
+      padding: var(--esp-3);
+      border: 2px solid var(--borde);
+      border-radius: var(--radio);
+      background: var(--superficie);
+      cursor: pointer;
+      transition: all var(--trans);
+      text-align: center;
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--texto);
+    }
+    .gasto-tipo-btn:hover {
+      border-color: var(--rojo-600);
+    }
+    .gasto-tipo-btn.seleccionado {
+      border-color: var(--rojo-600);
+      background: var(--rojo-50);
+      color: var(--rojo-800);
+      box-shadow: 0 0 0 3px var(--rojo-200);
+    }
+    .gasto-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--borde-2);
+      gap: var(--esp-3);
+    }
+    .gasto-item:last-child { border-bottom: none; }
+    .gasto-info { flex: 1; min-width: 0; }
+    .gasto-titulo {
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--texto);
+      margin-bottom: 2px;
+    }
+    .gasto-meta {
+      font-size: 11px;
+      color: var(--texto-2);
+    }
+    .gasto-monto {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--rojo-600);
+      white-space: nowrap;
+    }
+    .gasto-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: var(--radio-full);
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-left: 6px;
+    }
+    .gasto-badge.combustible { background: #FFF3E0; color: #E65100; }
+    .gasto-badge.pasaje      { background: #E3F2FD; color: #0D47A1; }
+    .gasto-badge.otro        { background: #F3E5F5; color: #4A148C; }
+  </style>
 </head>
 <body>
 
-    <header class="header">
+  <header class="header">
     <div class="container header-inner">
       <div class="header-logo" id="header-logo"></div>
       <div class="header-user">
@@ -44,7 +113,7 @@
              onerror="this.style.display='none'">
         <div style="flex: 1;">
           <h1 class="page-title">Dashboard General</h1>
-          <p class="page-subtitle">Pablo Alderete · Concejal Lista 1 Opcion 10 — ANR</p>
+          <p class="page-subtitle">Pablo Alderete · Concejal Lista 1 — ANR</p>
         </div>
         <button class="btn btn-primary" id="btn-exportar-pdf">📄 Exportar PDF</button>
       </div>
@@ -67,7 +136,7 @@
           <div class="kpi-sub">Por choferes</div>
         </div>
         <div class="kpi-card">
-          <div class="kpi-label">Vocas</div>
+          <div class="kpi-label">Bocas</div>
           <div class="kpi-value exito" id="kpi-vocas">0</div>
           <div class="kpi-sub">Sondeos</div>
         </div>
@@ -88,8 +157,9 @@
         <button class="tab active" data-tab="resumen">📊 Resumen</button>
         <button class="tab" data-tab="mesas">🪑 Mesas</button>
         <button class="tab" data-tab="pc">🎯 PC</button>
-        <button class="tab" data-tab="jz">📦 Punteoros</button>
+        <button class="tab" data-tab="jz">📦 Punteros</button>
         <button class="tab" data-tab="usuarios">👥 Usuarios</button>
+        <button class="tab" data-tab="gastos">💰 Gastos</button>
       </div>
 
       <!-- TAB: RESUMEN -->
@@ -116,7 +186,7 @@
 
         <div class="card mb-5">
           <div class="card-header">
-            <h2 class="card-title">🏆 Ranking de Activistas</h2>
+            <h2 class="card-title">🏆 Ranking de activistas</h2>
           </div>
           <div class="card-body" id="ranking-punteros">
             <div class="empty-state"><p>Cargando...</p></div>
@@ -158,7 +228,7 @@
         </div>
       </section>
 
-      <!-- TAB: JEFES DE ZONA -->
+      <!-- TAB: PUNTEROS (ex Jefes de Zona) -->
       <section id="tab-jz" class="tab-content hidden">
         <div class="card">
           <div class="card-header">
@@ -171,7 +241,7 @@
         </div>
       </section>
 
-      <!-- TAB: USUARIOS (reasignar) -->
+      <!-- TAB: USUARIOS -->
       <section id="tab-usuarios" class="tab-content hidden">
         <div class="card">
           <div class="card-header">
@@ -184,10 +254,113 @@
         </div>
       </section>
 
+      <!-- TAB: GASTOS -->
+      <section id="tab-gastos" class="tab-content hidden">
+
+        <!-- KPIs de gastos -->
+        <div class="kpi-grid mb-4">
+          <div class="kpi-card">
+            <div class="kpi-label">Total general</div>
+            <div class="kpi-value rojo" id="gasto-total-general">₲ 0</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Total hoy</div>
+            <div class="kpi-value" id="gasto-total-hoy">₲ 0</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Total mes</div>
+            <div class="kpi-value info" id="gasto-total-mes">₲ 0</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Cantidad</div>
+            <div class="kpi-value" id="gasto-cantidad">0</div>
+          </div>
+        </div>
+
+        <!-- Formulario de carga -->
+        <div class="card mb-4">
+          <div class="card-header">
+            <h2 class="card-title">💰 Registrar gasto</h2>
+          </div>
+          <div class="card-body">
+            <form id="form-gasto">
+
+              <div class="form-group">
+                <label class="form-label">Tipo de gasto <span class="req">*</span></label>
+                <div class="gasto-tipo-card">
+                  <button type="button" class="gasto-tipo-btn" data-tipo="COMBUSTIBLE">⛽ Combustible</button>
+                  <button type="button" class="gasto-tipo-btn" data-tipo="PASAJE">🚌 Pasaje</button>
+                  <button type="button" class="gasto-tipo-btn" data-tipo="OTRO">📦 Otro</button>
+                </div>
+                <input type="hidden" id="gasto-tipo" required>
+              </div>
+
+              <div class="grid grid-2" style="gap: var(--esp-3);">
+                <div class="form-group">
+                  <label class="form-label" for="gasto-fecha">Fecha <span class="req">*</span></label>
+                  <input type="date" id="gasto-fecha" class="form-input" required>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="gasto-monto">Monto (₲) <span class="req">*</span></label>
+                  <input type="number" id="gasto-monto" class="form-input" min="1" inputmode="numeric" placeholder="Ej: 50000" required>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="gasto-nombre">Nombre del beneficiario <span class="req">*</span></label>
+                <input type="text" id="gasto-nombre" class="form-input" placeholder="Ej: Juan Pérez" autocapitalize="words" required>
+              </div>
+
+              <div class="form-group hidden" id="gasto-vehiculo-group">
+                <label class="form-label" for="gasto-vehiculo">Tipo de vehículo <span class="req">*</span></label>
+                <select id="gasto-vehiculo" class="form-select">
+                  <option value="">— Seleccionar —</option>
+                  <option value="MOTO">🏍️ Moto</option>
+                  <option value="AUTO">🚗 Auto</option>
+                  <option value="CAMIONETA">🚙 Camioneta</option>
+                  <option value="OTRO">🚐 Otro</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="gasto-descripcion">Descripción <span class="req">*</span></label>
+                <input type="text" id="gasto-descripcion" class="form-input" placeholder="Ej: Nafta para movilidad" required>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="gasto-obs">Observaciones <span class="text-3">(opcional)</span></label>
+                <textarea id="gasto-obs" class="form-textarea" placeholder="Detalles adicionales..." rows="2"></textarea>
+              </div>
+
+              <button type="submit" id="btn-gasto" class="btn btn-primary btn-lg btn-block">
+                Registrar gasto
+              </button>
+
+            </form>
+          </div>
+        </div>
+
+        <!-- Historial -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Mis gastos</h2>
+            <div class="flex gap-2">
+              <button class="btn btn-secondary btn-sm" id="btn-exportar-gastos">📥 CSV</button>
+              <button class="btn btn-ghost btn-sm" id="btn-refresh-gastos">🔄</button>
+            </div>
+          </div>
+          <div class="card-body" id="lista-gastos">
+            <div class="empty-state"><p>Cargando...</p></div>
+          </div>
+        </div>
+
+      </section>
+
     </div>
   </main>
 
-   <script src="assets/js/config.js"></script>
+  <script src="assets/js/config.js"></script>
   <script src="assets/js/utils.js"></script>
   <script src="assets/js/cache.js"></script>
   <script src="assets/js/api.js"></script>
@@ -202,6 +375,7 @@
 
       AUTH.renderHeaderLogo();
       AUTH.renderHeaderUsuario(usuario);
+
       SYNC.iniciar();
       setInterval(() => SYNC._actualizarIndicadores(), 2000);
 
@@ -210,6 +384,9 @@
       let cacheEscuelas = [];
       let filtroMesas = 'todas';
       let ultimosTotales = null;
+      let gastosCache = [];
+      let tipoGastoSeleccionado = '';
+      let botonGastoBloqueado = false;
 
       // ============================================================
       // TABS
@@ -226,11 +403,12 @@
           if (t === 'pc')        cargarPC();
           if (t === 'jz')        cargarJZ();
           if (t === 'usuarios')  cargarUsuarios();
+          if (t === 'gastos')    cargarGastos();
         });
       });
 
       // ============================================================
-      // KPIs
+      // KPIs PRINCIPALES
       // ============================================================
       async function cargarKPIs() {
         try {
@@ -274,7 +452,7 @@
       async function cargarPorColegio() {
         const cont = document.getElementById('totales-colegio');
         try {
-          cacheEscuelas = await API.listarEscuelas();
+          cacheEscuelas = await DATA.escuelas();
           const escuelas = await API.totalesPorColegio();
           if (escuelas.length === 0) {
             cont.innerHTML = '<div class="empty-state"><p>Sin datos</p></div>';
@@ -450,7 +628,7 @@
       document.getElementById('btn-refresh-pc').addEventListener('click', cargarPC);
 
       // ============================================================
-      // JEFES DE ZONA
+      // PUNTEROS (ex Jefes de Zona)
       // ============================================================
       async function cargarJZ() {
         const cont = document.getElementById('lista-jz');
@@ -495,17 +673,16 @@
       document.getElementById('btn-refresh-jz').addEventListener('click', cargarJZ);
 
       // ============================================================
-      // USUARIOS (REASIGNAR)
+      // USUARIOS
       // ============================================================
       async function cargarUsuarios() {
         const cont = document.getElementById('lista-usuarios');
         try {
-          cacheEscuelas = await API.listarEscuelas();
+          cacheEscuelas = await DATA.escuelas();
           const usuarios = await API.listarUsuarios();
           cacheUsuarios = usuarios;
 
-          // Solo mostramos los que tienen colegio asignado (se pueden reasignar)
-          const conColegio = usuarios.filter(u => ['COORDINADOR', 'PUNTERO', 'VOCA'].includes(u.rol));
+          const conColegio = usuarios.filter(u => ['COORDINADOR', 'PUNTERO', 'VOCA', 'ACTIVISTA'].includes(u.rol));
 
           if (conColegio.length === 0) {
             cont.innerHTML = '<div class="empty-state"><p>Sin usuarios reasignables</p></div>';
@@ -581,7 +758,180 @@
       document.getElementById('btn-refresh-usuarios').addEventListener('click', cargarUsuarios);
 
       // ============================================================
-      // EXPORTAR PDF
+      // GASTOS
+      // ============================================================
+
+      // Selección de tipo
+      document.querySelectorAll('.gasto-tipo-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.gasto-tipo-btn').forEach(b => b.classList.remove('seleccionado'));
+          btn.classList.add('seleccionado');
+          tipoGastoSeleccionado = btn.dataset.tipo;
+          document.getElementById('gasto-tipo').value = tipoGastoSeleccionado;
+
+          // Mostrar tipo de vehículo solo si es COMBUSTIBLE
+          const grupoVeh = document.getElementById('gasto-vehiculo-group');
+          if (tipoGastoSeleccionado === 'COMBUSTIBLE') {
+            grupoVeh.classList.remove('hidden');
+            document.getElementById('gasto-vehiculo').required = true;
+          } else {
+            grupoVeh.classList.add('hidden');
+            document.getElementById('gasto-vehiculo').required = false;
+            document.getElementById('gasto-vehiculo').value = '';
+          }
+        });
+      });
+
+      // Cargar fecha por defecto (hoy)
+      document.getElementById('gasto-fecha').value = new Date().toISOString().slice(0, 10);
+
+      // Guardar gasto
+      document.getElementById('form-gasto').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (botonGastoBloqueado) return;
+
+        const tipo = tipoGastoSeleccionado;
+        const fecha = document.getElementById('gasto-fecha').value;
+        const monto = document.getElementById('gasto-monto').value;
+        const nombre = document.getElementById('gasto-nombre').value.trim();
+        const vehiculo = document.getElementById('gasto-vehiculo').value;
+        const descripcion = document.getElementById('gasto-descripcion').value.trim();
+        const obs = document.getElementById('gasto-obs').value.trim();
+
+        if (!tipo) { UI.toast('Seleccioná un tipo de gasto', 'error'); return; }
+        if (!fecha) { UI.toast('La fecha es obligatoria', 'error'); return; }
+        if (!monto || monto <= 0) { UI.toast('El monto debe ser mayor a 0', 'error'); return; }
+        if (!nombre) { UI.toast('El nombre del beneficiario es obligatorio', 'error'); return; }
+        if (tipo === 'COMBUSTIBLE' && !vehiculo) { UI.toast('Seleccioná el tipo de vehículo', 'error'); return; }
+        if (!descripcion) { UI.toast('La descripción es obligatoria', 'error'); return; }
+
+        botonGastoBloqueado = true;
+        const btn = document.getElementById('btn-gasto');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span> Guardando...';
+
+        try {
+          await API.request('registrarGasto', {
+            fecha: fecha,
+            tipo: tipo,
+            nombre_apellido: nombre,
+            tipo_vehiculo: vehiculo,
+            descripcion: descripcion,
+            monto: parseInt(monto, 10),
+            observaciones: obs
+          });
+
+          UI.toast('✅ Gasto registrado', 'exito');
+
+          // Reset del formulario (mantener fecha)
+          document.getElementById('gasto-monto').value = '';
+          document.getElementById('gasto-nombre').value = '';
+          document.getElementById('gasto-vehiculo').value = '';
+          document.getElementById('gasto-descripcion').value = '';
+          document.getElementById('gasto-obs').value = '';
+
+          cargarGastos();
+
+        } catch (err) {
+          UI.toast(err.message || 'Error', 'error');
+        } finally {
+          setTimeout(() => {
+            botonGastoBloqueado = false;
+            btn.disabled = false;
+            btn.textContent = 'Registrar gasto';
+          }, 300);
+        }
+      });
+
+      // Cargar gastos
+      async function cargarGastos() {
+        const cont = document.getElementById('lista-gastos');
+        try {
+          const gastos = await API.request('misGastos');
+          gastosCache = gastos;
+
+          // Cargar totales
+          const totales = await API.request('totalesGastos');
+          document.getElementById('gasto-total-general').textContent = '₲ ' + UTILS.formatearNumero(totales.total_general);
+          document.getElementById('gasto-total-hoy').textContent = '₲ ' + UTILS.formatearNumero(totales.total_hoy);
+          document.getElementById('gasto-total-mes').textContent = '₲ ' + UTILS.formatearNumero(totales.total_mes);
+          document.getElementById('gasto-cantidad').textContent = totales.cantidad;
+
+          if (gastos.length === 0) {
+            cont.innerHTML = '<div class="empty-state"><p>Sin gastos registrados</p></div>';
+            return;
+          }
+
+          const etiquetas = { COMBUSTIBLE: '⛽ Combustible', PASAJE: '🚌 Pasaje', OTRO: '📦 Otro' };
+          const clases = { COMBUSTIBLE: 'combustible', PASAJE: 'pasaje', OTRO: 'otro' };
+
+          cont.innerHTML = gastos.slice(0, 50).map(g => {
+            const fecha = UTILS.formatearFecha(g.fecha);
+            const vehTexto = g.tipo_vehiculo ? ' · ' + g.tipo_vehiculo : '';
+            return `
+              <div class="gasto-item">
+                <div class="gasto-info">
+                  <div class="gasto-titulo">
+                    ${UTILS.escaparHTML(g.descripcion)}
+                    <span class="gasto-badge ${clases[g.tipo] || 'otro'}">${etiquetas[g.tipo] || g.tipo}</span>
+                  </div>
+                  <div class="gasto-meta">
+                    ${fecha} · ${UTILS.escaparHTML(g.nombre_apellido)}${vehTexto}
+                  </div>
+                </div>
+                <div class="gasto-monto">₲ ${UTILS.formatearNumero(g.monto)}</div>
+              </div>
+            `;
+          }).join('');
+        } catch (e) {
+          cont.innerHTML = '<div class="empty-state"><p>Error al cargar</p></div>';
+        }
+      }
+
+      document.getElementById('btn-refresh-gastos').addEventListener('click', cargarGastos);
+
+      // Exportar gastos a CSV
+      document.getElementById('btn-exportar-gastos').addEventListener('click', () => {
+        if (gastosCache.length === 0) {
+          UI.toast('No hay gastos para exportar', 'alerta');
+          return;
+        }
+
+        const escapar = (v) => {
+          const s = String(v == null ? '' : v);
+          return '"' + s.replace(/"/g, '""') + '"';
+        };
+
+        const encabezados = ['ID', 'Fecha', 'Tipo', 'Beneficiario', 'Vehículo', 'Descripción', 'Monto', 'Observaciones'];
+        const lineas = [encabezados.map(escapar).join(',')];
+
+        gastosCache.forEach(g => {
+          lineas.push([
+            escapar(g.id_gasto),
+            escapar(UTILS.formatearFecha(g.fecha)),
+            escapar(g.tipo),
+            escapar(g.nombre_apellido),
+            escapar(g.tipo_vehiculo || ''),
+            escapar(g.descripcion),
+            escapar(g.monto),
+            escapar(g.observaciones || '')
+          ].join(','));
+        });
+
+        const csv = '\uFEFF' + lineas.join('\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'gastos_' + new Date().toISOString().slice(0, 10) + '.csv';
+        a.click();
+        URL.revokeObjectURL(url);
+
+        UI.toast('CSV exportado', 'exito');
+      });
+
+      // ============================================================
+      // EXPORTAR PDF (existente)
       // ============================================================
       document.getElementById('btn-exportar-pdf').addEventListener('click', async () => {
         try {
@@ -590,7 +940,6 @@
           const { jsPDF } = window.jspdf;
           const doc = new jsPDF();
 
-          // Título
           doc.setFontSize(20);
           doc.setTextColor(211, 47, 47);
           doc.text('Control Electoral 2026', 105, 20, { align: 'center' });
@@ -601,7 +950,6 @@
           doc.setTextColor(100, 100, 100);
           doc.text('Fecha: ' + new Date().toLocaleString('es-PY'), 105, 35, { align: 'center' });
 
-          // KPIs
           const t = ultimosTotales || await API.request('totalesGlobalesV2');
 
           doc.setFontSize(14);
@@ -616,9 +964,9 @@
             ['Votos BLANCO', t.totalVotos.BLANCO],
             ['Votos NULO', t.totalVotos.NULO],
             ['Personas movidas (choferes)', t.totalPersonasMovidas],
-            ['Vocas de urna', t.totalVocas],
+            ['Bocas', t.totalVocas],
             ['Registros PC', t.totalPC],
-            ['Envíos de jefes de zona', t.totalEnviosZona],
+            ['Envíos de punteros', t.totalEnviosZona],
             ['Personas enviadas por zona', t.totalPersonasZona]
           ];
 
@@ -630,7 +978,6 @@
             headStyles: { fillColor: [211, 47, 47] }
           });
 
-          // Totales por colegio
           const porColegio = await API.totalesPorColegio();
           if (porColegio.length > 0) {
             doc.setFontSize(14);
@@ -645,11 +992,10 @@
             });
           }
 
-          // Ranking punteros
           const ranking = await API.rankingPunteros();
           if (ranking.length > 0) {
             doc.setFontSize(14);
-            doc.text('Ranking de punteros', 14, doc.lastAutoTable.finalY + 15);
+            doc.text('Ranking de activistas', 14, doc.lastAutoTable.finalY + 15);
 
             doc.autoTable({
               startY: doc.lastAutoTable.finalY + 20,
@@ -666,7 +1012,6 @@
             });
           }
 
-          // Guardar
           const nombreArchivo = 'reporte_electoral_' + new Date().toISOString().slice(0, 10) + '.pdf';
           doc.save(nombreArchivo);
 
@@ -699,17 +1044,15 @@
         cargarKPIs();
       }, 30000);
 
-    })();
-  </script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('sw.js')
+            .then(reg => console.log('SW registrado:', reg.scope))
+            .catch(err => console.warn('SW falló:', err));
+        });
+      }
 
-    <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js')
-          .then(reg => console.log('SW registrado:', reg.scope))
-          .catch(err => console.warn('SW falló:', err));
-      });
-    }
+    })();
   </script>
 
 </body>
