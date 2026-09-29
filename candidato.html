@@ -2,9 +2,16 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#D32F2F">
   <title>Candidato — Control Electoral 2026</title>
+
+  <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#D32F2F">
+  <link rel="apple-touch-icon" href="assets/img/icon-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Control Electoral">
 
   <link rel="icon" type="image/png" href="assets/img/logo-lista1.png">
   <link rel="stylesheet" href="assets/css/base.css">
@@ -693,6 +700,16 @@
       }, 30000);
 
     })();
+  </script>
+
+    <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then(reg => console.log('SW registrado:', reg.scope))
+          .catch(err => console.warn('SW falló:', err));
+      });
+    }
   </script>
 
 </body>
