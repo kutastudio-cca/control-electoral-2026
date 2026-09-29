@@ -14,7 +14,7 @@
 </head>
 <body>
 
-    <header class="header">
+  <header class="header">
     <div class="container header-inner">
       <div class="header-logo" id="header-logo"></div>
       <div class="header-user">
@@ -128,12 +128,17 @@
 
       AUTH.renderHeaderLogo();
       AUTH.renderHeaderUsuario(usuario);
+
+      // ⭐ Iniciar SYNC
       SYNC.iniciar();
       setInterval(() => SYNC._actualizarIndicadores(), 2000);
 
       let estadoDia = 'CERRADO';
+      let botonBloqueado = false;
 
-      // ---------- ESTADO DEL DÍA ----------
+      // ============================================================
+      // ESTADO DEL DÍA
+      // ============================================================
       async function verificarEstadoDia() {
         try {
           const data = await API.estadoDia();
@@ -150,10 +155,13 @@
         } catch (e) { console.error(e); }
       }
 
-      // ---------- REGISTRAR ----------
-      document.getElementById('form-jz').addEventListener('submit', async (e) => {
+      // ============================================================
+      // REGISTRAR (con SYNC)
+      // ============================================================
+      document.getElementById('form-jz').addEventListener('submit', (e) => {
         e.preventDefault();
         if (estadoDia !== 'ABIERTO') { UI.toast('El día no está abierto', 'alerta'); return; }
+        if (botonBloqueado) return;
 
         const btn = document.getElementById('btn-jz');
         const apellido = document.getElementById('jz-apellido').value.trim();
@@ -167,18 +175,21 @@
           return;
         }
 
+        // Bloqueo temporal
+        botonBloqueado = true;
         btn.disabled = true;
         btn.innerHTML = '<span class="spinner"></span> Guardando...';
 
         try {
-          await API.request('registrarEnvioZona', {
+          SYNC.encolar('envio_zona', {
             apellido_familia: apellido,
             cantidad_personas: cantidad,
             zona_barrio: zona,
             tipo_envio: tipo,
             observaciones: obs
           });
-          UI.toast('✅ Envío registrado', 'exito');
+
+          UI.toast('✅ Guardado localmente', 'exito', 1500);
 
           // Limpiar
           document.getElementById('jz-apellido').value = '';
@@ -187,30 +198,51 @@
           document.getElementById('jz-apellido').focus();
 
           cargarEnvios();
+
         } catch (err) {
-          UI.toast(err.message || 'Error', 'error');
+          UI.toast('Error al guardar: ' + err.message, 'error');
         } finally {
-          btn.disabled = false;
-          btn.textContent = 'Registrar envío';
+          setTimeout(() => {
+            botonBloqueado = false;
+            btn.disabled = false;
+            btn.textContent = 'Registrar envío';
+          }, 300);
         }
       });
 
-      // ---------- LISTAR MIS ENVÍOS ----------
+      // ============================================================
+      // CARGAR ENVÍOS (backend + cola local)
+      // ============================================================
       async function cargarEnvios() {
         const cont = document.getElementById('lista-jz');
         try {
-          const envios = await API.request('misEnviosZona');
-          const totalPersonas = envios.reduce((s, e) => s + Number(e.cantidad_personas || 0), 0);
+          // Envíos confirmados en el backend
+          const confirmados = await API.request('misEnviosZona');
 
-          document.getElementById('kpi-envios').textContent = envios.length;
+          // Envíos pendientes en la cola local
+          const cola = SYNC._leerCola('envio_zona');
+          const pendientes = cola.map(c => ({
+            id_envio: c.id_local,
+            apellido_familia: c.datos.apellido_familia,
+            cantidad_personas: c.datos.cantidad_personas,
+            zona_barrio: c.datos.zona_barrio,
+            tipo_envio: c.datos.tipo_envio,
+            hora_registro: c.timestamp,
+            estado: 'PENDIENTE'
+          }));
+
+          const todos = [...confirmados, ...pendientes];
+          const totalPersonas = todos.reduce((s, e) => s + Number(e.cantidad_personas || 0), 0);
+
+          document.getElementById('kpi-envios').textContent = todos.length;
           document.getElementById('kpi-personas').textContent = totalPersonas;
 
-          if (envios.length === 0) {
+          if (todos.length === 0) {
             cont.innerHTML = '<p class="text-2 text-center">Sin envíos aún</p>';
             return;
           }
 
-          const ultimos = envios.slice(-20).reverse();
+          const ultimos = todos.slice(-20).reverse();
           cont.innerHTML = ultimos.map(e => `
             <div class="flex-between" style="padding: 10px 0; border-bottom: 1px solid var(--borde-2);">
               <div>
@@ -219,6 +251,7 @@
                   ${UTILS.escaparHTML(e.zona_barrio)}
                   · ${e.tipo_envio === 'CHOFER' ? '🚗 Chofer' : '🚶 Propio'}
                   · ${UTILS.formatearHora(e.hora_registro)}
+                  ${e.estado === 'PENDIENTE' ? ' · <span class="badge badge-alerta">⏳ Sync</span>' : ' · <span class="badge badge-exito">✅</span>'}
                 </div>
               </div>
               <div class="text-xl font-bold text-rojo">${e.cantidad_personas}</div>
@@ -231,11 +264,15 @@
 
       document.getElementById('btn-refresh').addEventListener('click', cargarEnvios);
 
-      // ---------- INICIALIZAR ----------
+      // ============================================================
+      // INICIALIZAR
+      // ============================================================
       await verificarEstadoDia();
       await cargarEnvios();
 
       setInterval(verificarEstadoDia, 30000);
+      setInterval(cargarEnvios, 10000);
+
     })();
   </script>
 
