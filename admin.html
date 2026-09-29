@@ -459,6 +459,8 @@
 
       AUTH.renderHeaderLogo();
       AUTH.renderHeaderUsuario(usuario);
+      SYNC.iniciar();
+      setInterval(() => SYNC._actualizarIndicadores(), 2000);
 
       let usuarioEditando = null;
       let cacheUsuarios = [];
