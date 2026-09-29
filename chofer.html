@@ -14,7 +14,7 @@
 </head>
 <body>
 
-    <header class="header">
+  <header class="header">
     <div class="container header-inner">
       <div class="header-logo" id="header-logo"></div>
       <div class="header-user">
@@ -26,6 +26,10 @@
 
   <main class="main">
     <div class="container container-sm">
+
+      <div id="estado-dia-box" class="alert alert-info mb-4">
+        <span id="estado-dia-texto">Verificando estado del día...</span>
+      </div>
 
       <div class="card mb-4">
         <div class="card-header">
@@ -39,14 +43,7 @@
               <label class="form-label" for="viaje-barrio">
                 Barrio de salida <span class="req">*</span>
               </label>
-              <input
-                type="text"
-                id="viaje-barrio"
-                class="form-input"
-                placeholder="Ej: San Miguel, Centro"
-                autocapitalize="words"
-                required
-              >
+              <input type="text" id="viaje-barrio" class="form-input" placeholder="Ej: San Miguel, Centro" autocapitalize="words" required>
             </div>
 
             <div class="form-group">
@@ -62,15 +59,7 @@
               <label class="form-label" for="viaje-cantidad">
                 Cantidad de personas <span class="req">*</span>
               </label>
-              <input
-                type="number"
-                id="viaje-cantidad"
-                class="form-input"
-                min="1"
-                inputmode="numeric"
-                placeholder="Ej: 4"
-                required
-              >
+              <input type="number" id="viaje-cantidad" class="form-input" min="1" inputmode="numeric" placeholder="Ej: 4" required>
             </div>
 
             <div class="form-group">
@@ -102,7 +91,7 @@
     </div>
   </main>
 
-    <script src="assets/js/config.js"></script>
+  <script src="assets/js/config.js"></script>
   <script src="assets/js/utils.js"></script>
   <script src="assets/js/cache.js"></script>
   <script src="assets/js/api.js"></script>
@@ -117,15 +106,40 @@
 
       AUTH.renderHeaderLogo();
       AUTH.renderHeaderUsuario(usuario);
+
+      // ⭐ Iniciar SYNC
       SYNC.iniciar();
       setInterval(() => SYNC._actualizarIndicadores(), 2000);
 
+      let estadoDia = 'CERRADO';
       let escuelas = [];
+      let botonBloqueado = false;
 
-      // ---------- CARGAR ESCUELAS ----------
+      // ============================================================
+      // ESTADO DEL DÍA
+      // ============================================================
+      async function verificarEstadoDia() {
+        try {
+          const data = await API.estadoDia();
+          estadoDia = data.estado_dia;
+          const box = document.getElementById('estado-dia-box');
+          const texto = document.getElementById('estado-dia-texto');
+          if (estadoDia === 'ABIERTO') {
+            box.className = 'alert alert-exito mb-4';
+            texto.innerHTML = '✅ <strong>Día ABIERTO</strong>';
+          } else {
+            box.className = 'alert alert-alerta mb-4';
+            texto.innerHTML = '🔒 <strong>Día CERRADO</strong>';
+          }
+        } catch (e) { console.error(e); }
+      }
+
+      // ============================================================
+      // CARGAR ESCUELAS (usa cache)
+      // ============================================================
       async function cargarEscuelas() {
         try {
-          escuelas = await API.listarEscuelas();
+          escuelas = await DATA.escuelas();
           const sel = document.getElementById('viaje-colegio');
           sel.innerHTML = '<option value="">— Seleccionar —</option>';
           escuelas.forEach(e => {
@@ -137,9 +151,13 @@
         } catch (e) { console.error(e); }
       }
 
-      // ---------- REGISTRAR VIAJE ----------
-      document.getElementById('form-viaje').addEventListener('submit', async (e) => {
+      // ============================================================
+      // REGISTRAR VIAJE (con SYNC)
+      // ============================================================
+      document.getElementById('form-viaje').addEventListener('submit', (e) => {
         e.preventDefault();
+        if (estadoDia !== 'ABIERTO') { UI.toast('El día no está abierto', 'alerta'); return; }
+        if (botonBloqueado) return;
 
         const btn = document.getElementById('btn-viaje');
         const barrio = document.getElementById('viaje-barrio').value.trim();
@@ -152,57 +170,82 @@
           return;
         }
 
+        // Bloqueo temporal
+        botonBloqueado = true;
         btn.disabled = true;
         btn.innerHTML = '<span class="spinner"></span> Guardando...';
 
         try {
-          await API.registrarViaje({
+          SYNC.encolar('viaje', {
             id_escuela_destino: colegio,
             cantidad_personas: cantidad,
             barrio: barrio,
             observaciones: obs
           });
-          UI.toast('✅ Viaje registrado', 'exito');
 
-          // Limpiar solo cantidad y obs (mantener barrio y colegio por si va de nuevo)
+          UI.toast('✅ Guardado localmente', 'exito', 1500);
+
+          // Limpiar solo cantidad y obs (mantener barrio y colegio para el próximo viaje)
           document.getElementById('viaje-cantidad').value = '';
           document.getElementById('viaje-obs').value = '';
           document.getElementById('viaje-cantidad').focus();
 
           cargarViajes();
+
         } catch (err) {
-          UI.toast(err.message || 'Error', 'error');
+          UI.toast('Error al guardar: ' + err.message, 'error');
         } finally {
-          btn.disabled = false;
-          btn.textContent = 'Registrar viaje';
+          setTimeout(() => {
+            botonBloqueado = false;
+            btn.disabled = false;
+            btn.textContent = 'Registrar viaje';
+          }, 300);
         }
       });
 
-      // ---------- LISTAR MIS VIAJES ----------
+      // ============================================================
+      // CARGAR VIAJES (backend + cola local)
+      // ============================================================
       async function cargarViajes() {
         const cont = document.getElementById('lista-viajes');
         try {
-          const viajes = await API.misViajes();
-          const totalPersonas = viajes.reduce((s, v) => s + Number(v.cantidad_personas || 0), 0);
+          // Viajes confirmados en el backend
+          const confirmados = await API.misViajes();
 
-          document.getElementById('contador-hoy').textContent = viajes.length + ' viajes';
+          // Viajes pendientes en la cola local
+          const cola = SYNC._leerCola('viaje');
+          const pendientes = cola.map(c => ({
+            id_viaje: c.id_local,
+            id_escuela_destino: c.datos.id_escuela_destino,
+            cantidad_personas: c.datos.cantidad_personas,
+            barrio: c.datos.barrio,
+            hora_registro: c.timestamp,
+            estado: 'PENDIENTE'
+          }));
+
+          const todos = [...confirmados, ...pendientes];
+          const totalPersonas = todos.reduce((s, v) => s + Number(v.cantidad_personas || 0), 0);
+
+          document.getElementById('contador-hoy').textContent = todos.length + ' viajes';
           document.getElementById('total-personas').textContent = totalPersonas + ' personas';
 
-          if (viajes.length === 0) {
+          if (todos.length === 0) {
             cont.innerHTML = '<p class="text-2 text-center">Sin viajes registrados</p>';
             return;
           }
 
-          const ultimos = viajes.slice(-20).reverse();
+          const ultimos = todos.slice(-20).reverse();
           cont.innerHTML = ultimos.map(v => {
             const esc = escuelas.find(e => e.id_escuela === v.id_escuela_destino);
+            const escNombre = esc ? esc.nombre : v.id_escuela_destino;
             return `
               <div class="flex-between" style="padding: 10px 0; border-bottom: 1px solid var(--borde-2);">
                 <div>
-                  <div class="font-semibold">${UTILS.escaparHTML(esc ? esc.nombre : v.id_escuela_destino)}</div>
+                  <div class="font-semibold">${UTILS.escaparHTML(escNombre)}</div>
                   <div class="text-xs text-2">
                     🚗 desde <strong>${UTILS.escaparHTML(v.barrio || '—')}</strong>
                     · ${UTILS.formatearHora(v.hora_registro)}
+                    ${v.estado === 'PENDIENTE' ? ' · <span class="badge badge-alerta">⏳ Sync</span>' : ' · <span class="badge badge-exito">✅</span>'}
                   </div>
                 </div>
                 <div class="text-xl font-bold text-rojo">${v.cantidad_personas}</div>
@@ -216,9 +259,16 @@
 
       document.getElementById('btn-refresh').addEventListener('click', cargarViajes);
 
-      // ---------- INICIALIZAR ----------
+      // ============================================================
+      // INICIALIZAR
+      // ============================================================
+      await verificarEstadoDia();
       await cargarEscuelas();
       await cargarViajes();
+
+      setInterval(verificarEstadoDia, 30000);
+      setInterval(cargarViajes, 10000);
+
     })();
   </script>
 
