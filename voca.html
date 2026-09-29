@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#D32F2F">
-  <title>Voca de Urna — Control Electoral 2026</title>
+  <title>Boca de Urna — Control Electoral 2026</title>
 
   <link rel="icon" type="image/png" href="assets/img/logo-lista1.png">
   <link rel="stylesheet" href="assets/css/base.css">
@@ -168,10 +168,13 @@
 </head>
 <body>
 
-  <header class="header">
+    <header class="header">
     <div class="container header-inner">
       <div class="header-logo" id="header-logo"></div>
-      <div class="header-user" id="header-user"></div>
+      <div class="header-user">
+        <div class="sync-indicator-wrap" id="sync-indicator"></div>
+        <div id="header-user"></div>
+      </div>
     </div>
   </header>
 
@@ -184,7 +187,7 @@
 
       <div class="card mb-4">
         <div class="card-header">
-          <h2 class="card-title">Registrar voca de urna</h2>
+          <h2 class="card-title">Registrar boca de urna</h2>
           <span class="badge badge-rojo" id="contador-hoy">0 hoy</span>
         </div>
         <div class="card-body">
@@ -234,7 +237,7 @@
               Limpiar
             </button>
             <button type="button" class="btn btn-primary btn-lg w-full" id="btn-guardar">
-              Guardar voca
+              Guardar Boca
             </button>
           </div>
 
@@ -243,7 +246,7 @@
 
       <div class="card">
         <div class="card-header">
-          <h2 class="card-title">Últimas vocas cargadas</h2>
+          <h2 class="card-title">Últimas bocas cargadas</h2>
           <button class="btn btn-ghost btn-sm" id="btn-refresh">🔄</button>
         </div>
         <div class="card-body" id="lista-vocas">
